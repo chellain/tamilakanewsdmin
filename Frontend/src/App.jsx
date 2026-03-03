@@ -92,7 +92,7 @@ function App() {
       <RouteProgressTracker />
       <Routes>
         <Route
-          path="/login"
+          path="/"
           element={
             <PublicRoute>
               <Login />
@@ -100,11 +100,11 @@ function App() {
           }
         />
         <Route
-          path="/"
+          path="/login"
           element={
-            <ProtectedRoute>
-              <AdminHome />
-            </ProtectedRoute>
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
           }
         />
         <Route

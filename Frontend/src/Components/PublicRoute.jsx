@@ -4,7 +4,7 @@ import { isAuthenticated } from "../utils/auth";
 
 const PublicRoute = ({ children }) => {
   if (isAuthenticated()) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/AdminHome" replace />;
   }
 
   return children;

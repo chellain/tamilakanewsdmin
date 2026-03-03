@@ -10,7 +10,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || "/";
+  const rawFrom = location.state?.from?.pathname;
+  const from = rawFrom && rawFrom !== "/" && rawFrom !== "/login" ? rawFrom : "/AdminHome";
 
   useEffect(() => {
     if (isAuthenticated()) {

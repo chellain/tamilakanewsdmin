@@ -32,7 +32,7 @@ const RouteProgressTracker = () => {
 
   useEffect(() => {
     if (!isAuthenticated()) return;
-    if (location.pathname === "/login") return;
+    if (location.pathname === "/login" || location.pathname === "/") return;
 
     const key = `${location.pathname}${location.search}`;
     if (lastPathRef.current === key) return;
