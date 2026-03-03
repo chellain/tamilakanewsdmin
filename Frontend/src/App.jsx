@@ -1,8 +1,8 @@
 ﻿
 import './App.css'
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from './Pages/Login';
 import AdminHome from './Pages/AdminHome';
 
@@ -24,10 +24,31 @@ import { setLayoutHydrated, setLayoutState } from "./Pages/Slice/editpaperSlice/
 import { setAdminConfig } from "./Pages/Slice/adminSlice.js";
 import { setUsers } from "./Pages/Slice/userSlice.js";
 import { setNewsPageConfig } from "./Pages/Slice/newspageSlice.js";
+import ProtectedRoute from "./Components/ProtectedRoute.jsx";
+import PublicRoute from "./Components/PublicRoute.jsx";
+import RouteProgressTracker from "./Components/RouteProgressTracker.jsx";
+import { getAuthToken } from "./utils/auth";
 function App() {
   const dispatch = useDispatch();
+  const [authToken, setAuthToken] = useState(getAuthToken());
 
   useEffect(() => {
+    const handleAuthChange = () => {
+      setAuthToken(getAuthToken());
+    };
+
+    window.addEventListener("authChanged", handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("authChanged", handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authToken) return;
+
     const loadInitialData = async () => {
       const usersPromise = getUsers();
 
@@ -62,27 +83,103 @@ function App() {
     };
 
     loadInitialData();
-  }, [dispatch]);
+  }, [authToken, dispatch]);
 
 
   return (
     <>
     <BrowserRouter>
+      <RouteProgressTracker />
       <Routes>
-        <Route path="/" element={<AdminHome/>} />
-        <Route path="/login" element={<Login/>} />
-        <Route path="/AdminHome" element={<AdminHome/>} />
-
-          <Route path="/Newsbund" element={<Newsbund />} />
-            <Route path="/Newsupload" element={<Templatepage />} />
-            <Route path="/Newspaper" element={<NewsPaperM />} />
-  <Route path="/preview/:id" element={<PreviewPage />} />
-  <Route path="/newspage-edit" element={<NewsPageEdit />} />
-
-               <Route path="/editpaper" element={<Editpaper />} />
-                <Route path="/Tryout" element={<Tryout />} />
-                  <Route path="/adminop" element={<Adminop />} />
-
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AdminHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/AdminHome"
+          element={
+            <ProtectedRoute>
+              <AdminHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Newsbund"
+          element={
+            <ProtectedRoute>
+              <Newsbund />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Newsupload"
+          element={
+            <ProtectedRoute>
+              <Templatepage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Newspaper"
+          element={
+            <ProtectedRoute>
+              <NewsPaperM />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/preview/:id"
+          element={
+            <ProtectedRoute>
+              <PreviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/newspage-edit"
+          element={
+            <ProtectedRoute>
+              <NewsPageEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/editpaper"
+          element={
+            <ProtectedRoute>
+              <Editpaper />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Tryout"
+          element={
+            <ProtectedRoute>
+              <Tryout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adminop"
+          element={
+            <ProtectedRoute>
+              <Adminop />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
     </>

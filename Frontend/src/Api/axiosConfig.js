@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearAuth, getAuthToken } from "../utils/auth";
 
 const api = axios.create({
   baseURL: "/api"
@@ -6,11 +7,25 @@ const api = axios.create({
 
 // Attach JWT token when available
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("userToken");
+  const token = getAuthToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401) {
+      clearAuth();
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

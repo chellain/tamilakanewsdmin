@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './Login.css';
 import { loginUser } from "../Api/userApi.js";
+import { isAuthenticated, setAuth } from "../utils/auth";
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate(from, { replace: true });
+    }
+  }, [from, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,9 +24,8 @@ const Login = () => {
 
     try {
       const response = await loginUser({ email, password });
-      localStorage.setItem("userToken", response.token);
-      localStorage.setItem("userData", JSON.stringify(response.user));
-      navigate('/AdminHome');
+      setAuth(response.token, response.user);
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('Login failed:', error);
       alert("Login failed. Please check your credentials.");

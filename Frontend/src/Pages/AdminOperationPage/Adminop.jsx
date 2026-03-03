@@ -10,6 +10,7 @@ import Manageuser from "./Manageuser/Manageuser.jsx";
 import { selectAllPages, selectDistrictPage } from "../Slice/adminSelectors.js";
 import { syncPagesFromAdmin } from "../Slice/editpaperSlice/editpaperslice.js";
 import { updateAdminConfig } from "../../Api/adminApi.js";
+import { clearAuth } from "../../utils/auth";
 
 export default function Adminop() {
   const dispatch = useDispatch();
@@ -19,11 +20,8 @@ export default function Adminop() {
   
   // Handle logout
   const handleLogout = () => {
-    // Clear any user data from localStorage
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userData');
-    // Redirect to login page or home page
-    window.location.href = '/login'; // Adjust this path as needed
+    clearAuth();
+    window.location.href = '/login';
   };
   
   // Get data from Redux store
