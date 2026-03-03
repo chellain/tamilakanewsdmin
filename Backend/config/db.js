@@ -3,19 +3,26 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 
 const seedDefaultAdmin = async () => {
-  const email = "dmin@gmail.com";
-  const existing = await User.findOne({ email });
-  if (existing) return;
+  // create two admin accounts if they don't already exist
+  const admins = [
+    { email: "dmin@gmail.com", name: "Default Admin" },
+    { email: "admin@gmail.com", name: "Requested Admin" }
+  ];
 
-  const hashedPassword = await bcrypt.hash("admin", 10);
-  await User.create({
-    name: "Default Admin",
-    email,
-    password: hashedPassword,
-    role: "Admin"
-  });
+  for (const { email, name } of admins) {
+    const existing = await User.findOne({ email });
+    if (existing) continue;
 
-  console.log("Default admin user created: dmin@gmail.com");
+    const hashedPassword = await bcrypt.hash("admin", 10);
+    await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: "Admin"
+    });
+
+    console.log(`Admin user created: ${email}`);
+  }
 };
 
 const connectDB = async () => {
