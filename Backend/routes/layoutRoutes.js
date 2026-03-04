@@ -5,13 +5,15 @@ import {
   createLayout,
   upsertLayout,
   updateLayout,
-  deleteLayout
+  deleteLayout,
+  votePoll
 } from "../controllers/layoutController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", getLayout);
+router.post("/polls/vote", votePoll);
 router.post("/", protect, adminOnly, createLayout);
 router.put("/", protect, adminOnly, upsertLayout);
 router.get("/:id", getLayoutById);

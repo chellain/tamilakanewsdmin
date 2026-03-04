@@ -38,7 +38,15 @@ app.get("/", (req, res) => {
   res.send("Tamilaka News API is running");
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT || 5000);
+const PUBLIC_PORT = Number(process.env.PUBLIC_PORT || 0);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+if (PUBLIC_PORT && PUBLIC_PORT !== PORT) {
+  app.listen(PUBLIC_PORT, () => {
+    console.log(`Server also listening on port ${PUBLIC_PORT}`);
+  });
+}

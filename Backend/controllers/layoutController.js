@@ -78,3 +78,73 @@ export const deleteLayout = async (req, res) => {
     res.status(500).json({ message: "Failed to delete layout", error: error.message });
   }
 };
+
+const findNestedContainer = (containers, targetId) => {
+  for (const cont of containers || []) {
+    if (cont.id === targetId) return cont;
+    if (Array.isArray(cont.nestedContainers) && cont.nestedContainers.length > 0) {
+      const found = findNestedContainer(cont.nestedContainers, targetId);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+export const votePoll = async (req, res) => {
+  try {
+    const { catName, containerId, slotId, isNested, parentContainerId, optionIndex } = req.body || {};
+
+    if (!catName || !containerId || !slotId) {
+      return res.status(400).json({ message: "catName, containerId, and slotId are required" });
+    }
+
+    const idx = Number(optionIndex);
+    if (Number.isNaN(idx)) {
+      return res.status(400).json({ message: "optionIndex must be a number" });
+    }
+
+    const layout = await Layout.findOne().sort({ updatedAt: -1, createdAt: -1 });
+    if (!layout) {
+      return res.status(404).json({ message: "Layout not found" });
+    }
+
+    const page = (layout.pages || []).find((p) => p.catName === catName);
+    if (!page) {
+      return res.status(404).json({ message: "Page not found" });
+    }
+
+    let container = null;
+    if (isNested && parentContainerId) {
+      const parent = findNestedContainer(page.containers || [], parentContainerId);
+      container = parent?.nestedContainers?.find((nc) => nc.id === containerId) || null;
+    } else {
+      container = (page.containers || []).find((c) => c.id === containerId) || null;
+    }
+
+    if (!container) {
+      return res.status(404).json({ message: "Container not found" });
+    }
+
+    const item = (container.items || []).find((i) => i.slotId === slotId);
+    if (!item || !item.pollData) {
+      return res.status(404).json({ message: "Poll not found" });
+    }
+
+    if (!Array.isArray(item.pollData.options) || !item.pollData.options[idx]) {
+      return res.status(400).json({ message: "Invalid poll option" });
+    }
+
+    item.pollData.options[idx].votes = (item.pollData.options[idx].votes || 0) + 1;
+    item.pollData.totalVotes = item.pollData.options.reduce(
+      (sum, opt) => sum + (opt.votes || 0),
+      0
+    );
+
+    layout.markModified("pages");
+    await layout.save();
+
+    res.json({ pollData: item.pollData });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to vote on poll", error: error.message });
+  }
+};

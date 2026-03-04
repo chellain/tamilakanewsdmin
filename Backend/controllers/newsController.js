@@ -106,6 +106,37 @@ export const updateNews = async (req, res) => {
   }
 };
 
+export const addComment = async (req, res) => {
+  try {
+    const { comment } = req.body || {};
+
+    if (!comment || !comment.name || !comment.text) {
+      return res.status(400).json({ message: "Comment name and text are required" });
+    }
+
+    const prepared = {
+      id: comment.id ?? Date.now(),
+      name: String(comment.name),
+      text: String(comment.text),
+      timestamp: comment.timestamp || new Date().toLocaleString(),
+    };
+
+    const updated = await News.findOneAndUpdate(
+      buildNewsQuery(req.params.id),
+      { $push: { comments: prepared } },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    res.json({ comments: updated.comments || [] });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to add comment", error: error.message });
+  }
+};
+
 export const deleteNews = async (req, res) => {
   try {
     const deleted = await News.findOneAndDelete(buildNewsQuery(req.params.id));
