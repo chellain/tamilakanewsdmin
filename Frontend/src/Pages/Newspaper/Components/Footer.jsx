@@ -63,8 +63,8 @@ export default function Footer() {
     </div>
         <Line direction="H" length="100%" thickness="2px" color="#e80d8c"/>
         <div className="foot-cont-c113" style={{display: "flex", flexDirection: "column", alignItems: "center", fontWeight: "bold"}}>
-            <div style={{color: "#e80d8c"}}> © {new Date().getFullYear()} Tamilaga News. All Rights Reserved.</div>
-            <div> Designed & Developed by Tamilaga News Team</div>
+            <div style={{color: "#e80d8c"}}> © {new Date().getFullYear()} Tamilaka News. All Rights Reserved.</div>
+            <div> Designed & Developed by Noospace Team</div>
         </div>
  
                     

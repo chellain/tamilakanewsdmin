@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { IoIosClose } from "react-icons/io";
 import { MdEdit } from "react-icons/md";
 import { FaPlay, FaYoutube, FaUpload } from "react-icons/fa";
+import { fileToWebPDataUrl } from "../../../utils/imageUtils";
 
 /**
  * NewsVideoBox
@@ -19,13 +20,6 @@ import { FaPlay, FaYoutube, FaUpload } from "react-icons/fa";
  * initialData   – { videoData, dimensions } from Redux / parent state
  * isInContainer – boolean, controls border style
  */
-const readFileAsDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
 
 const NewsVideoBox = ({
   id,
@@ -125,7 +119,7 @@ const NewsVideoBox = ({
       return;
     }
     const videoUrl = await readFileAsDataUrl(selectedVideo);
-    const thumbnailUrl = await readFileAsDataUrl(selectedThumb);
+    const thumbnailUrl = await fileToWebPDataUrl(selectedThumb, { maxWidth: 800, quality: 0.8 });
     const data = {
       type: "device",
       videoUrl,

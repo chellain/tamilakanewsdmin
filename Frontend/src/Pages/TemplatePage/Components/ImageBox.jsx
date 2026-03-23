@@ -2,14 +2,7 @@ import React from 'react'
 import { useState } from 'react';
 import { FaCheck, FaEdit, FaTimes } from "react-icons/fa";
 import { Rnd } from "react-rnd";
-
-const readFileAsDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
+import { fileToWebPDataUrl } from "../../../utils/imageUtils";
 
 export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, isInContainer = false }) {
   const [image, setImage] = useState(initialContent || null);
@@ -24,7 +17,7 @@ export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const dataUrl = await readFileAsDataUrl(file);
+      const dataUrl = await fileToWebPDataUrl(file, { maxWidth: 800, quality: 0.8 });
       setImage(dataUrl);
       setEditing(false);
       onUpdate(id, { content: dataUrl });

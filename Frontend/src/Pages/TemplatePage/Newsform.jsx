@@ -9,6 +9,7 @@ import layout2 from "../../assets/Layout2.png";
 import { useDispatch } from "react-redux";
 import { setLayout } from "../Slice/newsformSlice.js";
 import { useSelector } from "react-redux";
+import { fileToWebPDataUrl } from "../../utils/imageUtils";
 import "../TemplatePage/TemplatePage.scss";
 
 const emptyFormData = () => ({
@@ -26,13 +27,6 @@ const normalizeCategories = (value) => {
   return [];
 };
 
-const readFileAsDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
 
 export default function Newsform({
   initialData = null,
@@ -159,7 +153,7 @@ export default function Newsform({
 
     if (files && files[0]) {
       const file = files[0];
-      const dataUrl = await readFileAsDataUrl(file);
+      const dataUrl = await fileToWebPDataUrl(file, { maxWidth: 800, quality: 0.8 });
       if (activeLang === "en") {
         setEnglishBuffer((prev) => ({
           ...(prev || {
