@@ -78,12 +78,18 @@ export default function PreviewContainer({
       return page?.containers.find(c => c.id === id);
     }
   });
+  const language = useSelector(state => state.newsform?.language || "ta");
 
   if (!containerData) return null;
 
   const grid = containerData.grid || { columns: 2, gap: 10 };
   const headerEnabled = containerData.header?.enabled || false;
-  const headerTitle = containerData.header?.title || "";
+  const headerTam = containerData.header?.tam ?? containerData.header?.title ?? "";
+  const headerEng = containerData.header?.eng ?? "";
+  const headerTitle =
+    language === "en"
+      ? (headerEng || headerTam || "")
+      : (headerTam || "");
   const spacing = containerData.spacing || { padding: 10, margin: 0 };
   const nestedContainers = containerData.nestedContainers || [];
   const items = containerData.items || [];

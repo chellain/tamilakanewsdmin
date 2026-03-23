@@ -1,13 +1,8 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Rnd } from "react-rnd";
 import { AiOutlineSlack } from "react-icons/ai";
-import { FaTimes } from "react-icons/fa";
-import { FaVideo } from "react-icons/fa";
+import { FaTimes, FaVideo, FaImage, FaParagraph } from "react-icons/fa";
 import { BiGridAlt } from "react-icons/bi";
-import layout1 from "../../assets/Layout1.png";
-import layout2 from "../../assets/Layout2.png";
-import { useDispatch } from "react-redux";
-import { setLayout } from "../Slice/newsformSlice.js";
 import { useSelector } from "react-redux";
 import { fileToWebPDataUrl } from "../../utils/imageUtils";
 import "../TemplatePage/TemplatePage.scss";
@@ -41,10 +36,8 @@ export default function Newsform({
   const [englishBuffer, setEnglishBuffer] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(null);
   const [openForm, setOpenForm] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const dispatch = useDispatch();
-  const MLayout = useSelector((state) => state.newsform.MLayout);
   const allPages = useSelector((state) => state.admin.allPages || []);
+  const [categoryPage, setCategoryPage] = useState(0);
 
   const categoryOptions = Array.from(
     new Set(
@@ -60,6 +53,12 @@ export default function Newsform({
   );
 
   const selectedCategories = normalizeCategories(tamilBuffer.zonal);
+  const pageSize = 8;
+  const totalCategoryPages = Math.max(1, Math.ceil(categoryOptions.length / pageSize));
+  const pagedCategories = categoryOptions.slice(
+    categoryPage * pageSize,
+    categoryPage * pageSize + pageSize
+  );
 
   const hasEnglishBuffer = englishBuffer !== null;
   const displayData =
@@ -71,8 +70,6 @@ export default function Newsform({
           zonal: tamilBuffer.zonal,
         }
       : tamilBuffer;
-
-  const categoryRef = useRef(null);
 
   useEffect(() => {
     if (initialData) {
@@ -106,19 +103,10 @@ export default function Newsform({
   }, [initialData]);
 
   useEffect(() => {
-    if (!categoryOpen) return;
-    const handleClickOutside = (e) => {
-      if (categoryRef.current && !categoryRef.current.contains(e.target)) {
-        setCategoryOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [categoryOpen]);
-
-  useEffect(() => {
-    if (activeLang === "en") setCategoryOpen(false);
-  }, [activeLang]);
+    if (categoryPage >= totalCategoryPages) {
+      setCategoryPage(0);
+    }
+  }, [categoryPage, totalCategoryPages]);
 
   useEffect(() => {
     if (!hasEnglishBuffer) return;
@@ -279,7 +267,7 @@ export default function Newsform({
 
       {openForm && (
         <Rnd
-          default={{ x: 1080, y: 0, width: 450, height: 700 }}
+          default={{ x: 1000, y: 0, width: 520, height: 700 }}
           bounds="window"
           dragHandleClassName="drag-header"
           className="newsform-panel"
@@ -401,68 +389,71 @@ export default function Newsform({
                 )}
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Category</label>
-                <div
-                  ref={categoryRef}
-                  className={`newsform-multiselect${activeLang === "en" ? " is-disabled" : ""}`}
-                >
+              <div className="form-group newsform-category-group">
+                <div className="newsform-category-header">
+                  <label className="form-label">Category</label>
+                  <div className="newsform-selected-tags">
+                    {selectedCategories.length === 0 && (
+                      <span className="newsform-tag is-empty">No category selected</span>
+                    )}
+                    {selectedCategories.map((cat) => (
+                      <span key={cat} className="newsform-tag">
+                        {cat}
+                        {activeLang !== "en" && (
+                          <button
+                            type="button"
+                            className="newsform-tag-remove"
+                            onClick={() => toggleCategory(cat)}
+                          >
+                            x
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={`newsform-category-grid${activeLang === "en" ? " is-disabled" : ""}`}>
+                  {categoryOptions.length === 0 && (
+                    <div className="newsform-empty">No categories configured.</div>
+                  )}
+                  {pagedCategories.map((cat) => {
+                    const checked = selectedCategories.includes(cat);
+                    return (
+                      <label
+                        key={cat}
+                        className={`newsform-category-tile${checked ? " is-checked" : ""}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleCategory(cat)}
+                          disabled={activeLang === "en"}
+                        />
+                        <span>{cat}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <div className="newsform-category-footer">
+                  <span className="newsform-category-count">
+                    {categoryOptions.length > 0
+                      ? `${Math.min(categoryPage * pageSize + 1, categoryOptions.length)}-${Math.min(
+                          (categoryPage + 1) * pageSize,
+                          categoryOptions.length
+                        )} of ${categoryOptions.length}`
+                      : "0 categories"}
+                  </span>
                   <button
                     type="button"
-                    className="newsform-multiselect-trigger"
-                    onClick={() => {
-                      if (activeLang === "en") return;
-                      setCategoryOpen((prev) => !prev);
-                    }}
-                    disabled={activeLang === "en"}
+                    className="newsform-category-next"
+                    onClick={() => setCategoryPage((prev) => (prev + 1) % totalCategoryPages)}
+                    disabled={categoryOptions.length <= pageSize}
+                    title="Next categories"
                   >
-                    <span>
-                      {selectedCategories.length > 0
-                        ? selectedCategories.join(", ")
-                        : "Select categories"}
-                    </span>
-                    <span className="newsform-multiselect-caret">v</span>
+                    ⟶
                   </button>
-
-                  {selectedCategories.length > 0 && (
-                    <div className="newsform-selected-tags">
-                      {selectedCategories.map((cat) => (
-                        <span key={cat} className="newsform-tag">
-                          {cat}
-                          {activeLang !== "en" && (
-                            <button
-                              type="button"
-                              className="newsform-tag-remove"
-                              onClick={() => toggleCategory(cat)}
-                            >
-                              x
-                            </button>
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {categoryOpen && (
-                    <div className="newsform-multiselect-menu">
-                      {categoryOptions.length === 0 && (
-                        <div className="newsform-empty">No categories configured.</div>
-                      )}
-                      {categoryOptions.map((cat) => {
-                        const checked = selectedCategories.includes(cat);
-                        return (
-                          <label key={cat} className={`newsform-option${checked ? " is-checked" : ""}`}>
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleCategory(cat)}
-                            />
-                            <span>{cat}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
                 {activeLang === "en" && (
                   <div className="newsform-note">Switch to Tamil to edit categories.</div>
@@ -502,47 +493,35 @@ export default function Newsform({
               </div>
 
               {/* ── Add content items row ────────────────────────────────── */}
-              <div className="add-pi">
+              <div className="add-pi newsform-add-row">
                 <div
-                  className="add-para"
+                  className="newsform-add-btn"
                   draggable
                   onDragStart={handleParagraphDragStart}
                   style={{ cursor: "move" }}
                 >
+                  <FaParagraph size={14} />
                   Add Paragraph
                 </div>
                 <div
-                  className="add-img"
+                  className="newsform-add-btn"
                   draggable
                   onDragStart={handleImageDragStart}
                   style={{ cursor: "move" }}
                 >
+                  <FaImage size={14} />
                   Add Image
                 </div>
 
                 {/* ── NEW: Add Video button ───────────────────────────────── */}
                 <div
-                  className="add-video"
+                  className="newsform-add-btn"
                   draggable
                   onDragStart={handleVideoDragStart}
                   style={{
                     cursor: "move",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "8px 12px",
-                    background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)",
-                    color: "#fff",
-                    borderRadius: "8px",
-                    fontSize: "13px",
-                    fontWeight: "600",
                     userSelect: "none",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-                    transition: "opacity 0.2s",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                   title="Drag onto the canvas or into a Container Overlay"
                 >
                   <FaVideo size={13} />
@@ -550,53 +529,8 @@ export default function Newsform({
                 </div>
               </div>
 
-              <div>Select Layout</div>
-              <div
-                className="layout-encloser"
-                style={{ display: "flex", gap: "10px", margin: "10px" }}
-              >
-                <div
-                  className="layout lone"
-                  onClick={() => dispatch(setLayout(1))}
-                  style={{
-                    border:
-                      MLayout === 1 ? "3px solid #ff008c" : "3px solid #ffcce5",
-                    background: MLayout === 1 ? "#ffd0e8" : "#ffe6f2",
-                    borderRadius: "10px",
-                    padding: "5px",
-                    cursor: "pointer",
-                    transition: "0.3s",
-                    marginBottom: "10px",
-                  }}
-                >
-                  <img
-                    src={layout1}
-                    style={{ width: "100%", borderRadius: "8px" }}
-                  />
-                </div>
-
-                <div
-                  className="layout ltwo"
-                  onClick={() => dispatch(setLayout(2))}
-                  style={{
-                    border:
-                      MLayout === 2 ? "3px solid #ff008c" : "3px solid #ffcce5",
-                    background: MLayout === 2 ? "#ffd0e8" : "#ffe6f2",
-                    borderRadius: "10px",
-                    padding: "5px",
-                    cursor: "pointer",
-                    transition: "0.3s",
-                  }}
-                >
-                  <img
-                    src={layout2}
-                    style={{ width: "100%", borderRadius: "8px" }}
-                  />
-                </div>
-              </div>
-
               <button type="submit" onClick={submit} className="upload-button">
-                Preview / Apply
+                Save news
               </button>
             </form>
           </div>

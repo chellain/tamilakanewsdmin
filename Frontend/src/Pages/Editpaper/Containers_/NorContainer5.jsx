@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TbArrowsExchange } from "react-icons/tb";
 import { IoIosClose } from "react-icons/io";
@@ -258,7 +258,7 @@ const NorContainer5 = ({
         className={version === 1 ? "ep-nm2-news-2" : "ep-nm2-news-3"}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        onClick={handleNavigate}
+        onClick={border ? undefined : handleNavigate}
         style={{
           border: border ? "2px dotted #999" : "none",
           position: "relative",
@@ -334,7 +334,7 @@ const NorContainer5 = ({
           </>
         )}
 
-        {/* Separator Toggle Button â€” sits at bottom center of the content box */}
+        {/* Separator Toggle Button — sits at bottom center of the content box */}
         {border && (
           <button
             onClick={handleToggleSeparator}
@@ -350,7 +350,7 @@ const NorContainer5 = ({
         )}
       </div>
 
-      {/* FIX: Separator line â€” same width as container, directly below, no extra space */}
+      {/* FIX: Separator line — same width as container, directly below, no extra space */}
       {showSeparator && (
         <div
           style={{

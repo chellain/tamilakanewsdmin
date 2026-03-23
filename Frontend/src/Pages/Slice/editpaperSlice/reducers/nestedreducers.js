@@ -25,16 +25,17 @@ export const nestedReducers = {
           container: {
             id: `nested_container_${Date.now()}`,
             grid: {
-              columns: 2,
-              gap: 10
+              columns: 1,
+              gap: 0
             },
             items: [],
             header: {
               enabled: false,
-              title: ""
+              tam: "",
+              eng: ""
             },
             spacing: {
-              padding: 10,
+              padding: 0,
               margin: 0
             },
             nestedContainers: [],
@@ -75,15 +76,21 @@ export const nestedReducers = {
   },
 
   updateNestedContainerHeader(state, action) {
-    const { catName, parentContainerId, nestedContainerId, enabled, title } = action.payload;
+    const { catName, parentContainerId, nestedContainerId, enabled, tam, eng, title } = action.payload;
     const nestedCont = state.pages
       .find(p => p.catName === catName)
       ?.containers.find(c => c.id === parentContainerId)
       ?.nestedContainers?.find(nc => nc.id === nestedContainerId);
 
     if (nestedCont) {
+      if (!nestedCont.header) nestedCont.header = { enabled: false, tam: "", eng: "" };
       if (enabled !== undefined) nestedCont.header.enabled = enabled;
-      if (title !== undefined) nestedCont.header.title = title;
+      if (tam !== undefined) nestedCont.header.tam = tam;
+      if (eng !== undefined) nestedCont.header.eng = eng;
+      if (title !== undefined) {
+        if (!nestedCont.header.tam) nestedCont.header.tam = title;
+        if (nestedCont.header.eng === undefined) nestedCont.header.eng = "";
+      }
     }
     logState(state, "updateNestedContainerHeader");
   },
@@ -96,7 +103,7 @@ export const nestedReducers = {
       ?.nestedContainers?.find(nc => nc.id === nestedContainerId);
 
     if (nestedCont) {
-      if (!nestedCont.spacing) nestedCont.spacing = { padding: 10, margin: 0 };
+      if (!nestedCont.spacing) nestedCont.spacing = { padding: 0, margin: 0 };
       if (padding !== undefined) nestedCont.spacing.padding = padding;
       if (margin !== undefined) nestedCont.spacing.margin = margin;
     }

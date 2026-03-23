@@ -39,8 +39,8 @@ export default function Templatepage() {
   
   const [containerSettings, setContainerSettings] = useState({
     height: 1000,
-    padding: 20,
-    gap: 10,
+    padding: 0,
+    gap: 0,
     gridColumns: 1
   });
   
@@ -64,7 +64,7 @@ export default function Templatepage() {
       if (currentNews.containerSettings) {
         setContainerSettings(currentNews.containerSettings);
       } else {
-        setContainerSettings({ height: 1000, padding: 20, gap: 10, gridColumns: 1 });
+        setContainerSettings({ height: 1000, padding: 0, gap: 0, gridColumns: 1 });
       }
       
       if (currentNews.layout) {
@@ -120,9 +120,9 @@ export default function Templatepage() {
     const newContainer = {
       id: Date.now(),
       settings: {
-        columns: 2,
-        gap: 10,
-        padding: 20,
+        columns: 1,
+        gap: 0,
+        padding: 0,
         boxes: []
       }
     };

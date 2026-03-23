@@ -28,7 +28,7 @@ export default function Editpaper() {
   const currentPage = pages.find(p => p.catName === activePage);
   const containers = currentPage?.containers || [];
   const lines = currentPage?.lines || [];
-  const pageSettings = currentPage?.settings || { height: 600, gridColumns: 12, gap: 10, padding: 20 };
+  const pageSettings = currentPage?.settings || { height: 600, gridColumns: 12, gap: 0, padding: 0 };
 
   const categories = ["Politics", "Sports", "Cinema", "Weather", "Astrology", "Kids"];
   const [showEditor, setShowEditor] = useState(false);

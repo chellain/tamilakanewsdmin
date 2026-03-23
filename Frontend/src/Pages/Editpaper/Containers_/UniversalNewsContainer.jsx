@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { TbArrowsExchange } from "react-icons/tb";
 import { IoIosClose } from "react-icons/io";
@@ -67,7 +67,7 @@ const UniversalNewsContainer = ({
   const [showSavePresetPopup, setShowSavePresetPopup] = useState(false);
   const [presetName, setPresetName] = useState("");
 
-  // Dimension state â€” container, image, and padding
+  // Dimension state — container, image, and padding
   const [containerWidth, setContainerWidth] = useState(defaultWidth);
   const [containerHeight, setContainerHeight] = useState(defaultHeight);
   const [padding, setPadding] = useState(10);
@@ -322,7 +322,7 @@ const UniversalNewsContainer = ({
     setShowEditPopup(!showEditPopup);
   };
 
-  // Sync config string â†’ individual fields and dispatch instantly
+  // Sync config string → individual fields and dispatch instantly
   const syncFromConfigInput = useCallback((raw) => {
     const parts = raw.split("-").map(p => p.trim());
     if (parts.length !== 6) return;
@@ -393,7 +393,7 @@ const UniversalNewsContainer = ({
     }
   };
 
-  // Handler: individual field changed â†’ sync configInput + dispatch
+  // Handler: individual field changed → sync configInput + dispatch
   const handleDimensionChange = (field, rawVal) => {
     const val = parseInt(rawVal) || 0;
     let cw = containerWidth, ch = containerHeight, pad = padding, iw = imgWidth, ih = imgHeight;
@@ -407,7 +407,7 @@ const UniversalNewsContainer = ({
     dispatchDimensions({ cw, ch, pad, iw, ih });
   };
 
-  // Handler: config string changed â†’ parse + sync fields + dispatch
+  // Handler: config string changed → parse + sync fields + dispatch
   const handleConfigInputChange = (e) => {
     const raw = e.target.value;
     setConfigInput(raw);
@@ -714,7 +714,7 @@ const UniversalNewsContainer = ({
         className="universal-container"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        onClick={handleNavigate}
+        onClick={border ? undefined : handleNavigate}
         style={{
           border: border ? "2px dotted #999" : "none",
           position: "relative",
@@ -914,7 +914,7 @@ const UniversalNewsContainer = ({
                 </button>
               </div>
               <div style={{ fontSize: "10px", color: "#888", marginTop: "4px" }}>
-                containerWâ€“containerHâ€“layout(1-12)â€“paddingâ€“imgWâ€“imgH
+                containerW–containerH–layout(1-12)–padding–imgW–imgH
               </div>
             </div>
 

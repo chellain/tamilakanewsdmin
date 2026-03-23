@@ -13,8 +13,8 @@ export const pageReducers = {
           settings: {
             height: 600,
             gridColumns: 12,
-            gap: 10,
-            padding: 20
+            gap: 0,
+            padding: 0
           },
           containers: [],
           sliders: [],
@@ -36,8 +36,8 @@ export const pageReducers = {
         settings: {
           height: 600,
           gridColumns: 12,
-          gap: 10,
-          padding: 20
+          gap: 0,
+          padding: 0
         },
         containers: [],
         sliders: [],

@@ -276,7 +276,7 @@ const NewsVideoBox = ({
         <button
           onDoubleClick={handleDelete}
           title="Double-click to remove"
-          style={cornerBtnStyle("red", { top: 8, right: 8 })}
+          style={cornerBtnStyle("red", { bottom: 8, left: 8 })}
         >
           <IoIosClose size={20} />
         </button>
@@ -298,7 +298,7 @@ const NewsVideoBox = ({
     }}>
       {/* Controls row */}
       <div style={{
-        position: "absolute", top: 8, right: 8,
+        position: "absolute", bottom: 8, left: 8,
         display: "flex", gap: "8px", zIndex: 20,
       }}>
         <button

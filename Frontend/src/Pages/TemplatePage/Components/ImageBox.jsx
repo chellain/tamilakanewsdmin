@@ -1,5 +1,4 @@
-import React from 'react'
-import { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react'
 import { FaCheck, FaEdit, FaTimes } from "react-icons/fa";
 import { Rnd } from "react-rnd";
 import { fileToWebPDataUrl } from "../../../utils/imageUtils";
@@ -7,6 +6,17 @@ import { fileToWebPDataUrl } from "../../../utils/imageUtils";
 export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, isInContainer = false }) {
   const [image, setImage] = useState(initialContent || null);
   const [editing, setEditing] = useState(!initialContent);
+  const containerRef = useRef(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const isResizingRef = useRef(false);
+  const lastSizeRef = useRef({ width: box?.width || 0, height: box?.height || 0 });
+
+  useEffect(() => {
+    lastSizeRef.current = {
+      width: box?.width || lastSizeRef.current.width || 0,
+      height: box?.height || lastSizeRef.current.height || 0
+    };
+  }, [box?.width, box?.height]);
   
   // const handleDragStart = (e) => {
   //   e.dataTransfer.effectAllowed = "move";
@@ -24,16 +34,72 @@ export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, 
     }
   };
 
+  useEffect(() => {
+    isResizingRef.current = isResizing;
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const stopResizing = () => setIsResizing(false);
+    window.addEventListener("pointerup", stopResizing);
+    window.addEventListener("pointercancel", stopResizing);
+    return () => {
+      window.removeEventListener("pointerup", stopResizing);
+      window.removeEventListener("pointercancel", stopResizing);
+    };
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (!isInContainer || !containerRef.current) return;
+    const element = containerRef.current;
+    let frameId = null;
+    const observer = new ResizeObserver((entries) => {
+      if (!isResizingRef.current) return;
+      const entry = entries[0];
+      if (!entry) return;
+      const nextWidth = Math.round(entry.contentRect.width);
+      const nextHeight = Math.round(entry.contentRect.height);
+      if (nextWidth <= 0 || nextHeight <= 0) return;
+      const last = lastSizeRef.current;
+      if (nextWidth === last.width && nextHeight === last.height) return;
+      lastSizeRef.current = { width: nextWidth, height: nextHeight };
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        onUpdate(id, { width: nextWidth, height: nextHeight });
+      });
+    });
+    observer.observe(element);
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      observer.disconnect();
+    };
+  }, [id, isInContainer, onUpdate]);
+
   if (isInContainer) {
     return (
       <div
+        ref={containerRef}
+        onPointerDown={(e) => {
+          if (!containerRef.current) return;
+          const rect = containerRef.current.getBoundingClientRect();
+          const nearRight = rect.right - e.clientX <= 18;
+          const nearBottom = rect.bottom - e.clientY <= 18;
+          if (nearRight && nearBottom) {
+            setIsResizing(true);
+          }
+        }}
+        onPointerUp={() => setIsResizing(false)}
+        onPointerLeave={() => {
+          if (isResizingRef.current) setIsResizing(false);
+        }}
         style={{
           border: "2px dashed #555",
           background: "#fdfdfd",
           borderRadius: "8px",
           padding: "8px",
           position: "relative",
-          width: "100%",
+          width: box?.width ? `${box.width}px` : "100%",
+          height: box?.height ? `${box.height}px` : "auto",
           minHeight: "100px",
           resize: "both",
           overflow: "auto"
@@ -43,8 +109,9 @@ export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, 
           color="red"
           style={{
             position: "absolute",
-            top: 1,
-            right: 5,
+            top: "auto",
+            bottom: 5,
+            left: 5,
             background: "rgba(255, 235, 235, 1)",
             padding: "4px",
             borderRadius: "100%",
@@ -69,8 +136,9 @@ export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, 
               style={{
                 position: "absolute",
                 cursor: "pointer",
-                top: -5,
-                right: 25,
+                top: "auto",
+                bottom: 5,
+                left: 30,
                 background: "rgba(238, 255, 232, 1)",
                 padding: "4px",
                 borderRadius: "100%",
@@ -120,8 +188,9 @@ export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, 
         color="red"
         style={{
           position: "absolute",
-          top: 1,
-          right: 5,
+          top: "auto",
+          bottom: 5,
+          left: 5,
           background: "rgba(255, 235, 235, 1)",
           padding: "4px",
           borderRadius: "100%",
@@ -146,8 +215,9 @@ export default function ImageBox({ id, onDelete, onUpdate, initialContent, box, 
             style={{
               position: "absolute",
               cursor: "pointer",
-              top: -5,
-              right: 25,
+              top: "auto",
+              bottom: 5,
+              left: 30,
               background: "rgba(238, 255, 232, 1)",
               padding: "4px",
               borderRadius: "100%",

@@ -39,8 +39,9 @@ export default function ParagraphBox({ id, onDelete, onUpdate, initialContent, b
           className="para-cls-btn"
           style={{
             position: "absolute",
-            top: 1,
-            right: 5,
+            top: "auto",
+            bottom: 5,
+            left: 5,
             background: "white",
             padding: "4px",
             borderRadius: "100%",
@@ -65,8 +66,9 @@ export default function ParagraphBox({ id, onDelete, onUpdate, initialContent, b
               style={{
                 position: "absolute",
                 cursor: "pointer",
-                top: 1,
-                right: 30,
+                top: "auto",
+                bottom: 5,
+                left: 30,
                 background: "rgba(238, 255, 232, 1)",
                 padding: "5px",
                 borderRadius: "100%",
@@ -84,8 +86,9 @@ export default function ParagraphBox({ id, onDelete, onUpdate, initialContent, b
               style={{
                 position: "absolute",
                 cursor: "pointer",
-                top: 1,
-                right: 30,
+                top: "auto",
+                bottom: 5,
+                left: 30,
                 background: "rgba(238, 255, 232, 1)",
                 padding: "4px",
                 borderRadius: "100%",
@@ -119,8 +122,9 @@ export default function ParagraphBox({ id, onDelete, onUpdate, initialContent, b
         className="para-cls-btn"
         style={{
           position: "absolute",
-          top: 1,
-          right: 5,
+          top: "auto",
+          bottom: 5,
+          left: 5,
           background: "white",
           padding: "4px",
           borderRadius: "100%",
@@ -144,8 +148,9 @@ export default function ParagraphBox({ id, onDelete, onUpdate, initialContent, b
             style={{
               position: "absolute",
               cursor: "pointer",
-              top: 1,
-              right: 30,
+              top: "auto",
+              bottom: 5,
+              left: 30,
               background: "rgba(238, 255, 232, 1)",
               padding: "5px",
               borderRadius: "100%",
@@ -162,8 +167,9 @@ export default function ParagraphBox({ id, onDelete, onUpdate, initialContent, b
             style={{
               position: "absolute",
               cursor: "pointer",
-              top: 1,
-              right: 30,
+              top: "auto",
+              bottom: 5,
+              left: 30,
               background: "rgba(238, 255, 232, 1)",
               padding: "4px",
               borderRadius: "100%",

@@ -16,16 +16,17 @@ export const containerReducers = {
           container: {
             id: nanoid(),
             grid: {
-              columns: 2,
-              gap: 10
+              columns: 1,
+              gap: 0
             },
             items: [],
             header: {
               enabled: false,
-              title: ""
+              tam: "",
+              eng: ""
             },
             spacing: {
-              padding: 10,
+              padding: 0,
               margin: 0
             },
             nestedContainers: [],
@@ -60,14 +61,20 @@ export const containerReducers = {
   },
 
   updateContainerHeader(state, action) {
-    const { catName, containerId, enabled, title } = action.payload;
+    const { catName, containerId, enabled, tam, eng, title } = action.payload;
     const cont = state.pages
       .find(p => p.catName === catName)
       ?.containers.find(c => c.id === containerId);
 
     if (cont) {
+      if (!cont.header) cont.header = { enabled: false, tam: "", eng: "" };
       if (enabled !== undefined) cont.header.enabled = enabled;
-      if (title !== undefined) cont.header.title = title;
+      if (tam !== undefined) cont.header.tam = tam;
+      if (eng !== undefined) cont.header.eng = eng;
+      if (title !== undefined) {
+        if (!cont.header.tam) cont.header.tam = title;
+        if (cont.header.eng === undefined) cont.header.eng = "";
+      }
     }
     logState(state, "updateContainerHeader");
   },
@@ -79,7 +86,7 @@ export const containerReducers = {
       ?.containers.find(c => c.id === containerId);
 
     if (cont) {
-      if (!cont.spacing) cont.spacing = { padding: 10, margin: 0 };
+      if (!cont.spacing) cont.spacing = { padding: 0, margin: 0 };
       if (padding !== undefined) cont.spacing.padding = padding;
       if (margin !== undefined) cont.spacing.margin = margin;
     }

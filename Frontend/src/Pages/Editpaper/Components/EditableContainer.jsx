@@ -122,13 +122,15 @@ export default function EditableContainer({
       return page?.containers.find(c => c.id === id);
     }
   });
+  const language = useSelector(state => state.newsform?.language || "ta");
 
   // â”€â”€ Values derived from Redux state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const grid             = containerData?.grid    || { columns: 2, gap: 10 };
-  const spacing          = containerData?.spacing || { padding: 10, margin: 0 };
+  const grid             = containerData?.grid    || { columns: 1, gap: 0 };
+  const spacing          = containerData?.spacing || { padding: 0, margin: 0 };
   // Read header directly from Redux state every render â€” source of truth
   const reduxHeaderEnabled = containerData?.header?.enabled ?? false;
-  const reduxHeaderTitle   = containerData?.header?.title   ?? "";
+  const reduxHeaderTam     = containerData?.header?.tam ?? containerData?.header?.title ?? "";
+  const reduxHeaderEng     = containerData?.header?.eng ?? "";
   const nestedContainers = containerData?.nestedContainers || [];
   const items            = containerData?.items   || [];
   const sliders          = containerData?.sliders || [];
@@ -146,29 +148,33 @@ export default function EditableContainer({
   //    This is the KEY FIX: useEffect keeps local state in sync so that
   //    changes persisted in Redux are reflected after re-mounts / refreshes.
   const [headerEnabled, setHeaderEnabled] = useState(reduxHeaderEnabled);
-  const [headerTitle, setHeaderTitle]     = useState(reduxHeaderTitle);
+  const [headerTam, setHeaderTam] = useState(reduxHeaderTam);
+  const [headerEng, setHeaderEng] = useState(reduxHeaderEng);
 
   useEffect(() => {
     setHeaderEnabled(reduxHeaderEnabled);
-    setHeaderTitle(reduxHeaderTitle);
-  }, [reduxHeaderEnabled, reduxHeaderTitle]);
+    setHeaderTam(reduxHeaderTam);
+    setHeaderEng(reduxHeaderEng);
+  }, [reduxHeaderEnabled, reduxHeaderTam, reduxHeaderEng]);
 
   // â”€â”€ Dispatch helper for header â€” always sends both fields to Redux â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const dispatchHeader = (enabled, title) => {
+  const dispatchHeader = (enabled, tam, eng) => {
     if (isNested && parentContainerId) {
       dispatch(updateNestedContainerHeader({
         catName,
         parentContainerId,
         nestedContainerId: id,
         enabled,
-        title,
+        tam,
+        eng,
       }));
     } else {
       dispatch(updateContainerHeader({
         catName,
         containerId: id,
         enabled,
-        title,
+        tam,
+        eng,
       }));
     }
   };
@@ -177,13 +183,19 @@ export default function EditableContainer({
   const handleHeaderEnabledChange = (e) => {
     const val = e.target.checked;
     setHeaderEnabled(val);
-    dispatchHeader(val, headerTitle);
+    dispatchHeader(val, headerTam, headerEng);
   };
 
-  const handleHeaderTitleChange = (e) => {
+  const handleHeaderTamChange = (e) => {
     const val = e.target.value;
-    setHeaderTitle(val);
-    dispatchHeader(headerEnabled, val);
+    setHeaderTam(val);
+    dispatchHeader(headerEnabled, val, headerEng);
+  };
+
+  const handleHeaderEngChange = (e) => {
+    const val = e.target.value;
+    setHeaderEng(val);
+    dispatchHeader(headerEnabled, headerTam, val);
   };
 
   const handleDelete = (e) => {
@@ -294,12 +306,15 @@ export default function EditableContainer({
     e.stopPropagation();
   };
 
-  // â”€â”€ Colours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const borderColor = isNested ? "#f57c00" : "#666";
   const bgColor     = isNested ? "rgba(255, 152, 0, 0.05)" : "transparent";
   const headerAccent = isNested ? "#f57c00" : "#e91e8c";   // magenta for root, orange for nested
+  const headerDisplayText =
+    language === "en"
+      ? (headerEng || headerTam || "header")
+      : (headerTam || "header");
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   return (
     <div 
       style={{ 
@@ -322,7 +337,8 @@ export default function EditableContainer({
         style={{ 
           position: "absolute", 
           bottom: "-10px", 
-          right: "8px", 
+          right: isNested ? "auto" : "8px",
+          left: isNested ? "8px" : "auto",
           display: "flex", 
           gap: "8px", 
           zIndex: 1000, 
@@ -454,18 +470,36 @@ export default function EditableContainer({
               </label>
             </div>
 
-            {/* Header name input â€” only visible when enabled */}
+            {/* Header name inputs — only visible when enabled */}
             {headerEnabled && (
               <div>
                 <label style={{ fontSize: "11px", color: "#666", display: "block", marginBottom: "4px" }}>
-                  Header Name
+                  Header (Tamil)
                 </label>
                 <input
                   type="text"
-                  value={headerTitle}
-                  onChange={handleHeaderTitleChange}
-                  placeholder="Enter header name..."
+                  value={headerTam}
+                  onChange={handleHeaderTamChange}
+                  placeholder="Enter Tamil header..."
                   autoFocus
+                  style={{ 
+                    width: "100%", 
+                    padding: "6px 8px", 
+                    border: `1px solid ${headerAccent}`, 
+                    borderRadius: "4px", 
+                    fontSize: "13px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <label style={{ fontSize: "11px", color: "#666", display: "block", margin: "10px 0 4px" }}>
+                  Header (English)
+                </label>
+                <input
+                  type="text"
+                  value={headerEng}
+                  onChange={handleHeaderEngChange}
+                  placeholder="Enter English header..."
                   style={{ 
                     width: "100%", 
                     padding: "6px 8px", 
@@ -511,7 +545,7 @@ export default function EditableContainer({
               flexShrink: 0,
             }}
           >
-            {headerTitle || "header"}
+            {headerDisplayText}
           </span>
 
           {/* Decorative horizontal line â€” fills remaining space */}

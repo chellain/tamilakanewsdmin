@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TbArrowsExchange } from "react-icons/tb";
 import { IoIosClose } from "react-icons/io";
@@ -397,7 +397,7 @@ const NorContainer1 = ({
         className={version === 1 ? "ep-nm-news-1" : "ep-nm-news-2"}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        onClick={handleNavigate}
+        onClick={border ? undefined : handleNavigate}
         style={{
           border: border ? "2px dotted #999" : "none",
           position: "relative",

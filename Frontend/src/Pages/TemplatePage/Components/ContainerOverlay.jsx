@@ -5,9 +5,9 @@ import ParagraphBox from './ParagraphBox.jsx';
 import NewsVideoBox from './NewsVideoBox.jsx';   // ← NEW
 
 const defaultSettings = {
-  columns: 2,
-  gap: 10,
-  padding: 20,
+  columns: 1,
+  gap: 0,
+  padding: 0,
   boxes: []
 };
 
@@ -34,21 +34,13 @@ export default function ContainerOverlay({
   }, [id]);
 
   const [showSettings, setShowSettings] = useState(false);
-  const [tempSettings, setTempSettings] = useState({ ...settings });
 
   const handleDelete = () => {
     onDelete(id);
   };
 
   const handleEditClick = () => {
-    setTempSettings({ ...settings });
     setShowSettings(!showSettings);
-  };
-
-  const handleApply = () => {
-    setSettings(tempSettings);
-    onUpdate(id, tempSettings);
-    setShowSettings(false);
   };
 
   const handleDragOver = (e) => {
@@ -198,8 +190,13 @@ export default function ContainerOverlay({
                 type="number"
                 min="1"
                 max="6"
-                value={tempSettings.columns}
-                onChange={(e) => setTempSettings({ ...tempSettings, columns: parseInt(e.target.value) || 1 })}
+                value={settings.columns}
+                onChange={(e) => {
+                  const next = parseInt(e.target.value) || 1;
+                  const updated = { ...settings, columns: next };
+                  setSettings(updated);
+                  onUpdate(id, updated);
+                }}
                 style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px' }}
               />
             </div>
@@ -211,8 +208,13 @@ export default function ContainerOverlay({
                 type="number"
                 min="0"
                 max="50"
-                value={tempSettings.gap}
-                onChange={(e) => setTempSettings({ ...tempSettings, gap: parseInt(e.target.value) || 0 })}
+                value={settings.gap}
+                onChange={(e) => {
+                  const next = parseInt(e.target.value) || 0;
+                  const updated = { ...settings, gap: next };
+                  setSettings(updated);
+                  onUpdate(id, updated);
+                }}
                 style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px' }}
               />
             </div>
@@ -224,27 +226,16 @@ export default function ContainerOverlay({
                 type="number"
                 min="0"
                 max="100"
-                value={tempSettings.padding}
-                onChange={(e) => setTempSettings({ ...tempSettings, padding: parseInt(e.target.value) || 0 })}
+                value={settings.padding}
+                onChange={(e) => {
+                  const next = parseInt(e.target.value) || 0;
+                  const updated = { ...settings, padding: next };
+                  setSettings(updated);
+                  onUpdate(id, updated);
+                }}
                 style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px' }}
               />
             </div>
-            <button
-              onClick={handleApply}
-              style={{
-                width: '100%',
-                padding: '8px',
-                background: '#667eea',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: '500'
-              }}
-            >
-              Apply
-            </button>
           </div>
         )}
 

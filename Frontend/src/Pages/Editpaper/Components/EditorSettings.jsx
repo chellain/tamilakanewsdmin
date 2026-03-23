@@ -10,7 +10,7 @@ export default function EditorSettings() {
   const activePage = useSelector(state => state.editpaper.activePage);
   const pageSettings = useSelector(state => {
     const page = state.editpaper.pages.find(p => p.catName === activePage);
-    return page?.settings || { height: 600, gridColumns: 12, gap: 10, padding: 20 };
+    return page?.settings || { height: 600, gridColumns: 12, gap: 0, padding: 0 };
   });
 
   const [isOpen, setIsOpen] = useState(false);

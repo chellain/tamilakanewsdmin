@@ -108,7 +108,7 @@ $admin-border: rgba(219, 112, 147, 0.3);
     tr {
       border-bottom: 1px solid $admin-border;
       transition: all 0.2s ease;
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.85);
 
       &:hover {
         background: rgba(219, 112, 147, 0.15);
@@ -122,7 +122,7 @@ $admin-border: rgba(219, 112, 147, 0.3);
 
       td {
         padding: 16px;
-        color: $admin-text;
+        color: $admin-primary;
         border-right: 1px solid $admin-border;
         vertical-align: middle;
         white-space: nowrap;
@@ -236,6 +236,7 @@ $admin-border: rgba(219, 112, 147, 0.3);
 
 .modal {
   background: rgba(255, 255, 255, 0.98);
+  color: $admin-primary;
   border-radius: 15px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
   max-width: 500px;
@@ -310,9 +311,9 @@ $admin-border: rgba(219, 112, 147, 0.3);
       display: block;
       margin-bottom: 8px;
       font-weight: 500;
-      color: $admin-text;
+      color: $admin-primary;
       font-size: 14px;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      text-shadow: none;
     }
 
     input, select {
@@ -323,7 +324,11 @@ $admin-border: rgba(219, 112, 147, 0.3);
       font-size: 14px;
       transition: all 0.2s ease;
       background: rgba(255, 255, 255, 0.9);
-      color: $admin-text;
+      color: $admin-primary;
+
+      &::placeholder {
+        color: rgba(45, 27, 56, 0.55);
+      }
 
       &:focus {
         outline: none;
@@ -334,7 +339,7 @@ $admin-border: rgba(219, 112, 147, 0.3);
 
       &:disabled {
         background: rgba(248, 249, 250, 0.8);
-        color: $admin-text-secondary;
+        color: rgba(45, 27, 56, 0.5);
         cursor: not-allowed;
         border-color: $admin-border;
         opacity: 0.7;
