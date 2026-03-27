@@ -10,10 +10,16 @@
   flex-direction: column;
   font-family: sans-serif;
   overflow: visible !important;
-  position: fixed; 
+  position: relative;
   z-index: 999999;
-  transform: translate(1080px,10px);
 
+}
+
+.pageeditor-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999999;
 }
 
 /* Pages and Districts Sections */

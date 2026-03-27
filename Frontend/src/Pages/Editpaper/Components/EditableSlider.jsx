@@ -364,6 +364,8 @@ export function EditableSlider({
     setCurrentIndex((prev) => Math.min(droppedContainers.length - 1, prev + 1));
   };
 
+  const rootZIndex = showSettings ? 500 : 1;
+
   return (
     <div
       ref={containerRef}
@@ -377,6 +379,8 @@ export function EditableSlider({
         pointerEvents: "auto",
         display: "flex",
         flexDirection: "column",
+        zIndex: rootZIndex,
+        isolation: "isolate",
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -389,7 +393,7 @@ export function EditableSlider({
           right: "8px",
           display: "flex",
           gap: "8px",
-          zIndex: 99999,
+          zIndex: 20,
           pointerEvents: "auto",
         }}
       >
@@ -432,7 +436,7 @@ export function EditableSlider({
             border: "2px solid #0066cc",
             borderRadius: "8px",
             padding: "15px",
-            zIndex: 99999,
+            zIndex: 200,
             minWidth: "220px",
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
           }}
@@ -668,7 +672,7 @@ export function EditableSlider({
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
-                    zIndex: 100,
+                    zIndex: 30,
                     opacity: currentIndex === 0 ? 0.3 : 1,
                   }}
                 >
@@ -692,7 +696,7 @@ export function EditableSlider({
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
-                    zIndex: 100,
+                    zIndex: 30,
                     opacity:
                       currentIndex === droppedContainers.length - 1 ? 0.3 : 1,
                   }}
@@ -748,7 +752,7 @@ export function EditableSlider({
                 transform: "translateX(-50%)",
                 display: "flex",
                 gap: "8px",
-                zIndex: 100,
+                zIndex: 30,
               }}
             >
               {droppedContainers.map((_, idx) => (
@@ -780,7 +784,7 @@ export function EditableSlider({
           width: "8px",
           cursor: "ew-resize",
           background: "transparent",
-          zIndex: 1001,
+          zIndex: 40,
         }}
       />
     </div>

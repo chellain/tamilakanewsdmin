@@ -721,6 +721,8 @@ const UniversalNewsContainer = ({
           width: containerWidth > 0 ? `${containerWidth}px` : undefined,
           minHeight: containerHeight > 0 ? `${containerHeight}px` : undefined,
           padding: `${padding}px`,
+          zIndex: showEditPopup ? 200 : 1,
+          isolation: "isolate",
         }}
       >
         {border && (

@@ -138,6 +138,8 @@
     font-weight: 600;
     position: fixed;
     transform: translate(1460px,0px);
+    z-index: 1000000;
+    pointer-events: auto;
 }
 .pageeditorbtn2
 {
@@ -152,6 +154,8 @@
     font-size: 20px;
     position: fixed;
     transform: translate(-40px,0px);
+    z-index: 1000000;
+    pointer-events: auto;
 }
 // // -----------container CSS--------------//
 // .ep-bg-news-1,.ep-bg-news-2,.ep-bg-news-3,.ep-bg-news-4,.ep-nm-news-1,

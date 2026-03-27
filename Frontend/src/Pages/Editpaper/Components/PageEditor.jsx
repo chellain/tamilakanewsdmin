@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Rnd } from "react-rnd";
 
 import { X, Plus } from "lucide-react";
 
@@ -140,8 +141,8 @@ const PresetsTab = () => {
             </div>
             
             <div style={{ fontSize: "11px", color: "#666", fontFamily: "monospace" }}>
-              <div>Container: {preset.dimensions.containerWidth}Ã—{preset.dimensions.containerHeight}px</div>
-              <div>Image: {preset.dimensions.imgWidth}Ã—{preset.dimensions.imgHeight}px</div>
+              <div>Container: {preset.dimensions.containerWidth}×{preset.dimensions.containerHeight}px</div>
+              <div>Image: {preset.dimensions.imgWidth}×{preset.dimensions.imgHeight}px</div>
               <div>Padding: {preset.dimensions.padding}px</div>
             </div>
             
@@ -443,28 +444,34 @@ export default function PageEditor({
   };
 
   return (
-    <div
-      className="page-editor-container"
-      style={{ transform: `translate(${switchpos[0]}px,${switchpos[1]}px)` }}
-    >
-      <div className="page-editor-header">
-        <div className="page-editor-title">Page Editor</div>
+    <div className="pageeditor-overlay">
+      <Rnd
+        position={{ x: switchpos[0], y: switchpos[1] }}
+        onDragStop={(e, d) => setSwitchpos([d.x, d.y])}
+        bounds="parent"
+        dragHandleClassName="page-editor-header"
+        enableResizing={false}
+        style={{ zIndex: 999999, pointerEvents: "auto" }}
+      >
+        <div className="page-editor-container">
+          <div className="page-editor-header">
+            <div className="page-editor-title">Page Editor</div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="pe-rev-btn"
-            onClick={() =>
-              setSwitchpos((v) => (v[0] === 1080 ? [10, 10] : [1080, 10]))
-            }
-          >
-            <GrRevert />
-          </button>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                className="pe-rev-btn"
+                onClick={() =>
+                  setSwitchpos((v) => (v[0] === 1080 ? [10, 10] : [1080, 10]))
+                }
+              >
+                <GrRevert />
+              </button>
 
-          <button className="page-editor-close-btn" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </div>
-      </div>
+              <button className="page-editor-close-btn" onClick={onClose}>
+                <X size={18} />
+              </button>
+            </div>
+          </div>
 
       <div
         className="page-editor-content"
@@ -546,7 +553,7 @@ export default function PageEditor({
         <div className="drag-drop-section">
           <div className="section-title">Drag and Drop the containers</div>
 
-          {/* âœ… DRAGGABLE CONTAINER OVERLAY */}
+          {/* ✅ DRAGGABLE CONTAINER OVERLAY */}
 
           {activeTab === "containers" && (
             <div
@@ -947,6 +954,8 @@ export default function PageEditor({
           </div>
         </div>
       </div>
+        </div>
+      </Rnd>
     </div>
   );
 }

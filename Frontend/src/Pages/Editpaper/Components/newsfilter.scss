@@ -1,12 +1,19 @@
+.newsfilter-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+}
+
 .ep-floater1 {
   width: 450px; height: 600px;
   background: #ffffff;
   border-radius: 5px;
   color: #000000;
   font-family: 'Inter', sans-serif;
-  position: absolute;
-  transform: translate(-90px,-70px);
+  position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
 
 
 }

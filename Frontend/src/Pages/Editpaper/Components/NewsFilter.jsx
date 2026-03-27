@@ -71,25 +71,26 @@ export default function NewsFilter({ open, onClose }) {
   if (!open) return null;
 
   return (
-    <Rnd
-      default={{ x: 100, y: 100, width: 400, height: 600 }}
-      bounds="window"
-      dragHandleClassName="drag-handle-filter"
-      style={{
-        zIndex: 9998,
-        position: "fixed",
-      }}
-    >
-      <div className="ep-floater1">
-        <div
-          className="ep-close-btn-sec drag-handle-filter"
-          style={{ cursor: "move" }}
-        >
-          <div className="epcbs-nm">News Container</div>
-          <div className="epcbs-btn" onClick={onClose}>
-            <IoClose />
+    <div className="newsfilter-overlay">
+      <Rnd
+        default={{ x: 100, y: 100, width: 400, height: 600 }}
+        bounds="parent"
+        dragHandleClassName="drag-handle-filter"
+        style={{
+          zIndex: 9998,
+          pointerEvents: "auto",
+        }}
+      >
+        <div className="ep-floater1">
+          <div
+            className="ep-close-btn-sec drag-handle-filter"
+            style={{ cursor: "move" }}
+          >
+            <div className="epcbs-nm">News Container</div>
+            <div className="epcbs-btn" onClick={onClose}>
+              <IoClose />
+            </div>
           </div>
-        </div>
         <div className="ep-fl1-btns">
           {categoryList.map((cat, idx) => (
             <div
@@ -138,7 +139,8 @@ onDragStart={(e) => {
             );
           })}
         </div>
-      </div>
-    </Rnd>
+        </div>
+      </Rnd>
+    </div>
   );
 }

@@ -298,6 +298,8 @@ export function EditableSlider2({
     ? translateX > -(scrollContainerRef.current.scrollWidth - (containerRef.current?.offsetWidth || width))
     : false;
 
+  const rootZIndex = showSettings ? 500 : 1;
+
   return (
     <div
       ref={containerRef}
@@ -309,6 +311,8 @@ export function EditableSlider2({
         height: droppedContainers.length > 0 ? "fit-content" : "auto",
         minHeight: droppedContainers.length === 0 ? "120px" : "0",
         pointerEvents: "auto",
+        zIndex: rootZIndex,
+        isolation: "isolate",
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -321,7 +325,7 @@ export function EditableSlider2({
           right: "8px",
           display: "flex",
           gap: "8px",
-          zIndex: 99999,
+          zIndex: 20,
           pointerEvents: "auto",
         }}
       >
@@ -364,7 +368,7 @@ export function EditableSlider2({
             border: "2px solid #ff6b35",
             borderRadius: "8px",
             padding: "15px",
-            zIndex: 99999,
+            zIndex: 200,
             minWidth: "220px",
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
           }}
@@ -625,7 +629,7 @@ export function EditableSlider2({
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: canSlideLeft ? "pointer" : "not-allowed",
-                    zIndex: 1001,
+                    zIndex: 30,
                     pointerEvents: "auto",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
                     transition: "all 0.2s ease",
@@ -660,7 +664,7 @@ export function EditableSlider2({
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: canSlideRight ? "pointer" : "not-allowed",
-                    zIndex: 1001,
+                    zIndex: 30,
                     pointerEvents: "auto",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
                     transition: "all 0.2s ease",
@@ -693,7 +697,7 @@ export function EditableSlider2({
           width: "8px",
           cursor: "ew-resize",
           background: "transparent",
-          zIndex: 1001,
+          zIndex: 40,
         }}
       />
     </div>

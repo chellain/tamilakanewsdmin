@@ -315,6 +315,8 @@ export default function EditableContainer({
       : (headerTam || "header");
 
 
+  const rootZIndex = showSettings ? 500 : 1;
+
   return (
     <div 
       style={{ 
@@ -328,6 +330,8 @@ export default function EditableContainer({
         margin: `${margin}px`,
         display: "flex",
         flexDirection: "column",
+        zIndex: rootZIndex,
+        isolation: "isolate",
       }}
     >
       {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -341,7 +345,7 @@ export default function EditableContainer({
           left: isNested ? "8px" : "auto",
           display: "flex", 
           gap: "8px", 
-          zIndex: 1000, 
+          zIndex: 20, 
           pointerEvents: "auto" 
         }}
       >
@@ -393,7 +397,7 @@ export default function EditableContainer({
             border: `2px solid ${borderColor}`, 
             borderRadius: "8px", 
             padding: "15px", 
-            zIndex: 2000, 
+            zIndex: 200, 
             minWidth: "290px", 
             maxHeight: "520px", 
             overflowY: "auto",
@@ -631,7 +635,7 @@ export default function EditableContainer({
                 if (!Component) return null;
                 const defaults = getUniversalContainerDefaults(item.containerType);
                 return (
-                  <div key={item.slotId} style={{ pointerEvents: "auto", position: "relative", zIndex: 10 + index }}>
+                  <div key={item.slotId} style={{ pointerEvents: "auto", position: "relative" }}>
                     <Component 
                       border 
                       slotId={item.slotId} 
@@ -658,7 +662,7 @@ export default function EditableContainer({
               if (element.type === 'nested') {
                 const nested = element.data;
                 return (
-                  <div key={nested.id} style={{ pointerEvents: "auto", position: "relative", zIndex: 10 + index }}>
+                  <div key={nested.id} style={{ pointerEvents: "auto", position: "relative" }}>
                     <EditableContainer
                       id={nested.id}
                       catName={catName}
@@ -673,7 +677,7 @@ export default function EditableContainer({
               if (element.type === 'slider') {
                 const slider = element.data;
                 return (
-                  <div key={slider.id} style={{ pointerEvents: "auto", position: "relative", zIndex: 10 + index, width: "100%", height: "fit-content" }}>
+                  <div key={slider.id} style={{ pointerEvents: "auto", position: "relative", width: "100%", height: "fit-content" }}>
                     {slider.type === "type1" ? (
                       <EditableSlider
                         id={slider.id}
