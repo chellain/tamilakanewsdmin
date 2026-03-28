@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import logo from '../assets/logo.png'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import luffy from '../assets/luffy.webp'
+import luffy from '../assets/luffy.png'
 import { FaRegClock, FaPen, FaEye, FaTrash } from "react-icons/fa";
 import { deleteNews, setCurrentNews } from "./Slice/newsformSlice.js";
 import { deleteNews as deleteNewsApi } from "../Api/newsApi.js";
