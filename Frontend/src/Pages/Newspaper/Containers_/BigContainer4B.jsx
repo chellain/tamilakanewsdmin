@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 import timeFun from "./timeFun";
 
 const BigNewsContainer4B = ({
@@ -111,3 +111,4 @@ const BigNewsContainer4B = ({
 };
 
 export default BigNewsContainer4B;
+

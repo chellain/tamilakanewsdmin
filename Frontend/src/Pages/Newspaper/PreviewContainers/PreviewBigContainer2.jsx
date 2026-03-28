@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import timeFun from "../Containers_/timeFun";
 import { useSelector } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 
 const PreviewBigContainer2 = ({
   newsId,
@@ -75,5 +75,6 @@ const PreviewBigContainer2 = ({
 };
 
 export default PreviewBigContainer2;
+
 
 

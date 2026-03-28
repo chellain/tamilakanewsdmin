@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import luffy from "../../assets/luffy.webp";
+import luffy from "../../assets/luffy.png";
 import newsimg from "../../assets/newsimg.avif";
 import { IoSearchSharp, IoSettingsOutline } from "react-icons/io5";
 import { IoMdNotificationsOutline } from "react-icons/io";
@@ -987,3 +987,4 @@ function VideoResponsive({ box, isMobile = false }) {
     </div>
   );
 }
+

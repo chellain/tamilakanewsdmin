@@ -19,7 +19,7 @@ import {
 } from "../../Slice/editpaperSlice/editpaperslice";
 
 import { useSelector, useDispatch } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 
 const NorContainer5 = ({
   border = false,
@@ -415,3 +415,4 @@ const separatorBtnStyle = {
 };
 
 export default NorContainer5;
+

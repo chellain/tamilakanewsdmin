@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import timeFun from "../Containers_/timeFun";
 import { useSelector } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 
 const PreviewNorContainer4 = ({ newsId, version = 1, showSeparator = false }) => {
   const navigate = useNavigate();
@@ -79,5 +79,6 @@ const PreviewNorContainer4 = ({ newsId, version = 1, showSeparator = false }) =>
 };
 
 export default PreviewNorContainer4;
+
 
 

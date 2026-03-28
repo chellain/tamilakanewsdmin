@@ -2,7 +2,7 @@ import { useState } from "react";
 import timeFun from "../Containers_/timeFun";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 
 const PreviewNorContainer5 = ({
   newsId,
@@ -195,5 +195,6 @@ const imgstyle = {
 };
 
 export default PreviewNorContainer5;
+
 
 

@@ -6,7 +6,7 @@ import { HiOutlineMinus } from "react-icons/hi";
 import { MdEdit } from "react-icons/md";
 import { IoCopyOutline } from "react-icons/io5";
 import { useSelector, useDispatch } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 import {
   dropNewsIntoSlot,
   dropNewsIntoSliderSlot,
@@ -1018,4 +1018,5 @@ const UniversalNewsContainer = ({
 };
 
 export default UniversalNewsContainer;
+
 

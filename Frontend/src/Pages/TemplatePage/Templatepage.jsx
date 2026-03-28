@@ -7,7 +7,7 @@ import { BiWorld } from "react-icons/bi";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { HiMiniMoon } from "react-icons/hi2";
 
-import luffy from  "../../assets/luffy.webp"
+import luffy from  "../../assets/luffy.png"
 import { useSelector, useDispatch } from 'react-redux';
 
 import { FaTimes } from "react-icons/fa";
@@ -521,3 +521,4 @@ export default function Templatepage() {
     </div>
   );
 }
+

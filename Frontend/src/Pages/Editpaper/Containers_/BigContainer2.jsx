@@ -22,7 +22,7 @@ import {
 } from "../../Slice/editpaperSlice/editpaperslice";
 
 import { useSelector, useDispatch } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 
 const BigNewsContainer2 = ({
   border = false,
@@ -435,3 +435,4 @@ const iconBtnStyle = {
 };
 
 export default BigNewsContainer2;
+

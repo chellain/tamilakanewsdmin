@@ -4,7 +4,7 @@ import { TbArrowsExchange } from "react-icons/tb";
 import { IoIosClose } from "react-icons/io";
 import { HiOutlineMinus } from "react-icons/hi";
 import { useSelector, useDispatch } from "react-redux";
-import jwt from "../../../assets/jwt.jpg";
+import jwt from "../../../assets/jwt.png";
 import {
   dropNewsIntoSlot,
   removeNewsFromSlot,
@@ -463,3 +463,4 @@ const iconBtnStyle = {
 };
 
 export default NorContainer2;
+
