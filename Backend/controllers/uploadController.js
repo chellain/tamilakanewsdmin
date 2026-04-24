@@ -54,9 +54,11 @@ export const uploadThumbnail = async (req, res) => {
 
   try {
     const webpName = await optimizeThumbnail(thumbnailFile);
+    const mediaPath = `/uploads/thumbnails/${webpName}`;
 
     return res.json({
-      url: `${buildBaseUrl(req)}/uploads/thumbnails/${webpName}`,
+      url: mediaPath,
+      publicUrl: `${buildBaseUrl(req)}${mediaPath}`,
     });
   } catch (err) {
     console.error("Thumbnail upload failed:", err);

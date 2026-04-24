@@ -21,6 +21,7 @@ import "../Newspaper/PreviewContainers/previewcont.css";
 import "./Previewpge.scss";
 
 import timeFun from "../Newspaper/Containers_/timeFun";
+import { resolveMediaUrl } from "../../utils/media";
 import AdBox from '../Newspaper/Components/AdBox';
 import Newsheader from '../Newspaper/Components/Newsheader';
 import Line from "../Newspaper/Components/Line";
@@ -264,7 +265,7 @@ export default function PreviewPage({ forcedNewsId = null, editMode = false }) {
     let isVideo = false;
 
     if (typeof data.thumbnail === "string") {
-      url = data.thumbnail;
+      url = resolveMediaUrl(data.thumbnail);
       isVideo =
         data.thumbnail.includes(".mp4") ||
         data.thumbnail.includes(".webm") ||

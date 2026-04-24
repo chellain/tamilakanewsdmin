@@ -18,6 +18,7 @@ import {
   setLayout
 } from "../Slice/newsformSlice.js";
 import { createNews, updateNews as updateNewsApi } from "../../Api/newsApi.js";
+import { resolveMediaUrl } from "../../utils/media.js";
 import './TemplatePage.scss';
 
 import Newsform from './Newsform.jsx';
@@ -395,7 +396,7 @@ export default function Templatepage() {
 
                     if (thumb) {
                     if (typeof thumb === "string") {
-                      finalThumb = thumb;
+                      finalThumb = resolveMediaUrl(thumb);
                       isVideo =
                         thumb.startsWith("data:video/") ||
                         thumb.includes(".mp4") ||

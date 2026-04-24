@@ -117,7 +117,17 @@ const resolveShareImage = (rawImage, backendOrigin) => {
 
   const image = rawImage.trim();
   if (!image || image.startsWith("data:")) return "";
-  if (/^https?:\/\//i.test(image)) return image;
+  if (/^https?:\/\//i.test(image)) {
+    try {
+      const url = new URL(image);
+      if (url.pathname.startsWith("/uploads/")) {
+        return `${backendOrigin}${url.pathname}${url.search}${url.hash}`;
+      }
+      return image;
+    } catch (error) {
+      return image;
+    }
+  }
   if (image.startsWith("/")) return `${backendOrigin}${image}`;
 
   return `${backendOrigin}/${image.replace(/^\/+/, "")}`;
