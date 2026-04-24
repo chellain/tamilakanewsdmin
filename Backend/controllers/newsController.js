@@ -2,6 +2,98 @@ import mongoose from "mongoose";
 import News from "../models/News.js";
 import Progress from "../models/Progress.js";
 
+const buildBaseUrl = (req) => `${req.protocol}://${req.get("host")}`;
+
+const absolutizeUploadUrl = (value, req) => {
+  if (typeof value !== "string") return value;
+
+  const raw = value.trim();
+  if (
+    !raw ||
+    raw.startsWith("data:") ||
+    raw.startsWith("blob:") ||
+    /^https?:\/\//i.test(raw)
+  ) {
+    return raw;
+  }
+
+  const baseUrl = buildBaseUrl(req);
+
+  if (raw.startsWith("/uploads/")) {
+    return `${baseUrl}${raw}`;
+  }
+
+  if (raw.startsWith("uploads/")) {
+    return `${baseUrl}/${raw}`;
+  }
+
+  return raw;
+};
+
+const normalizeVideoDataMedia = (videoData, req) => {
+  if (!videoData || typeof videoData !== "object") return videoData;
+
+  return {
+    ...videoData,
+    thumbnail: absolutizeUploadUrl(videoData.thumbnail, req),
+    videoUrl: absolutizeUploadUrl(videoData.videoUrl, req),
+  };
+};
+
+const normalizeBoxMedia = (box, req) => {
+  if (!box || typeof box !== "object" || box.type !== "video") return box;
+
+  return {
+    ...box,
+    videoData: normalizeVideoDataMedia(box.videoData, req),
+  };
+};
+
+const normalizeContainerMedia = (container, req) => {
+  if (!container?.settings?.boxes || !Array.isArray(container.settings.boxes)) {
+    return container;
+  }
+
+  return {
+    ...container,
+    settings: {
+      ...container.settings,
+      boxes: container.settings.boxes.map((box) => normalizeBoxMedia(box, req)),
+    },
+  };
+};
+
+const serializeNewsMedia = (news, req) => {
+  if (!news) return news;
+
+  const plainNews =
+    typeof news.toObject === "function" ? news.toObject() : { ...news };
+
+  return {
+    ...plainNews,
+    data: plainNews.data
+      ? {
+          ...plainNews.data,
+          thumbnail: absolutizeUploadUrl(plainNews.data.thumbnail, req),
+        }
+      : plainNews.data,
+    dataEn: plainNews.dataEn
+      ? {
+          ...plainNews.dataEn,
+          thumbnail: absolutizeUploadUrl(plainNews.dataEn.thumbnail, req),
+        }
+      : plainNews.dataEn,
+    fullContent: Array.isArray(plainNews.fullContent)
+      ? plainNews.fullContent.map((box) => normalizeBoxMedia(box, req))
+      : plainNews.fullContent,
+    containerOverlays: Array.isArray(plainNews.containerOverlays)
+      ? plainNews.containerOverlays.map((container) =>
+          normalizeContainerMedia(container, req)
+        )
+      : plainNews.containerOverlays,
+  };
+};
+
 const isObjectId = (value) => {
   return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
 };
@@ -18,7 +110,7 @@ const buildNewsQuery = (idParam) => {
 export const getAllNews = async (req, res) => {
   try {
     const news = await News.find().sort({ createdAt: -1 });
-    res.json(news);
+    res.json(news.map((item) => serializeNewsMedia(item, req)));
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch news", error: error.message });
   }
@@ -30,7 +122,7 @@ export const getNewsById = async (req, res) => {
     if (!news) {
       return res.status(404).json({ message: "News not found" });
     }
-    res.json(news);
+    res.json(serializeNewsMedia(news, req));
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch news", error: error.message });
   }
@@ -61,7 +153,7 @@ export const createNews = async (req, res) => {
       }
     }
 
-    res.status(201).json(created);
+    res.status(201).json(serializeNewsMedia(created, req));
   } catch (error) {
     res.status(400).json({ message: "Failed to create news", error: error.message });
   }
@@ -100,7 +192,7 @@ export const updateNews = async (req, res) => {
       }
     }
 
-    res.json(updated);
+    res.json(serializeNewsMedia(updated, req));
   } catch (error) {
     res.status(400).json({ message: "Failed to update news", error: error.message });
   }

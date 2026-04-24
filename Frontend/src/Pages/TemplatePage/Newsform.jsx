@@ -156,7 +156,7 @@ export default function Newsform({
 
         if (name === "thumbnail" && file.type?.startsWith("image/")) {
           const response = await uploadThumbnail(file);
-          nextValue = response?.url || "";
+          nextValue = response?.publicUrl || response?.url || "";
         } else if (name === "thumbnail") {
           nextValue = await readFileAsDataUrl(file);
         } else {
