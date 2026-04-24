@@ -6,6 +6,7 @@ import luffy from '../assets/luffy.png'
 import { FaRegClock, FaPen, FaEye, FaTrash } from "react-icons/fa";
 import { deleteNews, setCurrentNews } from "./Slice/newsformSlice.js";
 import { deleteNews as deleteNewsApi } from "../Api/newsApi.js";
+import { resolveMediaUrl } from "../utils/media.js";
 import './Newsbund.scss';
 
 export default function Newsbund() {
@@ -20,7 +21,7 @@ export default function Newsbund() {
 
     // If already a URL string → just use it
     if (typeof thumbnail === "string") {
-      return thumbnail;
+      return resolveMediaUrl(thumbnail);
     }
 
     // If it's a File → convert to object URL

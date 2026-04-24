@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Rnd } from "react-rnd";
 import "./newsfilter.scss";
 import { IoClose } from "react-icons/io5";
+import { resolveMediaUrl } from "../../../utils/media";
 
 export default function NewsFilter({ open, onClose }) {
   // Retrieve real news from Redux store
@@ -53,7 +54,7 @@ export default function NewsFilter({ open, onClose }) {
     if (!thumbnail) return null;
 
     if (typeof thumbnail === "string") {
-      return thumbnail;
+      return resolveMediaUrl(thumbnail);
     }
 
     if (thumbnail instanceof File) {

@@ -6,6 +6,7 @@ import { BiGridAlt } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { fileToWebPDataUrl } from "../../utils/imageUtils";
 import { uploadThumbnail } from "../../Api/uploadApi";
+import { resolveMediaUrl } from "../../utils/media";
 import "../TemplatePage/TemplatePage.scss";
 
 const emptyFormData = () => ({
@@ -100,7 +101,7 @@ export default function Newsform({
       if (data.thumbnail) {
         try {
           if (typeof data.thumbnail === "string") {
-            setThumbnailPreview(data.thumbnail);
+            setThumbnailPreview(resolveMediaUrl(data.thumbnail));
           } else {
             setThumbnailPreview(URL.createObjectURL(data.thumbnail));
           }
@@ -174,7 +175,11 @@ export default function Newsform({
           }));
         } else {
           setTamilBuffer((prev) => ({ ...prev, [name]: nextValue }));
-          if (name === "thumbnail") setThumbnailPreview(nextValue);
+          if (name === "thumbnail") {
+            setThumbnailPreview(
+              typeof nextValue === "string" ? resolveMediaUrl(nextValue) : nextValue
+            );
+          }
         }
       } catch (error) {
         console.error(`Failed to process ${name}:`, error);
