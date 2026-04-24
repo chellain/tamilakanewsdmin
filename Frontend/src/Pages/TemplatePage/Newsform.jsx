@@ -5,6 +5,7 @@ import { FaTimes, FaVideo, FaImage, FaParagraph } from "react-icons/fa";
 import { BiGridAlt } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { fileToWebPDataUrl } from "../../utils/imageUtils";
+import { uploadThumbnail } from "../../Api/uploadApi";
 import "../TemplatePage/TemplatePage.scss";
 
 const emptyFormData = () => ({
@@ -21,6 +22,14 @@ const normalizeCategories = (value) => {
   if (typeof value === "string" && value.trim()) return [value.trim()];
   return [];
 };
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 
 export default function Newsform({
@@ -141,20 +150,35 @@ export default function Newsform({
 
     if (files && files[0]) {
       const file = files[0];
-      const dataUrl = await fileToWebPDataUrl(file, { maxWidth: 800, quality: 0.8 });
-      if (activeLang === "en") {
-        setEnglishBuffer((prev) => ({
-          ...(prev || {
-            ...emptyFormData(),
-            thumbnail: tamilBuffer.thumbnail,
-            images: tamilBuffer.images,
-            zonal: tamilBuffer.zonal,
-          }),
-          [name]: dataUrl,
-        }));
-      } else {
-        setTamilBuffer((prev) => ({ ...prev, [name]: dataUrl }));
-        if (name === "thumbnail") setThumbnailPreview(dataUrl);
+      try {
+        let nextValue = null;
+
+        if (name === "thumbnail" && file.type?.startsWith("image/")) {
+          const response = await uploadThumbnail(file);
+          nextValue = response?.url || "";
+        } else if (name === "thumbnail") {
+          nextValue = await readFileAsDataUrl(file);
+        } else {
+          nextValue = await fileToWebPDataUrl(file, { maxWidth: 800, quality: 0.8 });
+        }
+
+        if (activeLang === "en") {
+          setEnglishBuffer((prev) => ({
+            ...(prev || {
+              ...emptyFormData(),
+              thumbnail: tamilBuffer.thumbnail,
+              images: tamilBuffer.images,
+              zonal: tamilBuffer.zonal,
+            }),
+            [name]: nextValue,
+          }));
+        } else {
+          setTamilBuffer((prev) => ({ ...prev, [name]: nextValue }));
+          if (name === "thumbnail") setThumbnailPreview(nextValue);
+        }
+      } catch (error) {
+        console.error(`Failed to process ${name}:`, error);
+        alert(`Failed to upload ${name}. Please try again.`);
       }
       return;
     }

@@ -3,7 +3,7 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { uploadVideo } from "../controllers/uploadController.js";
+import { uploadThumbnail, uploadVideo } from "../controllers/uploadController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -62,6 +62,14 @@ const upload = multer({
     fileSize: 200 * 1024 * 1024,
   },
 });
+
+router.post(
+  "/thumbnail",
+  protect,
+  adminOnly,
+  upload.single("thumbnail"),
+  uploadThumbnail
+);
 
 router.post(
   "/video",
