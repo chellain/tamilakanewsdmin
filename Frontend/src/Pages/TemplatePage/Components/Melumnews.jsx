@@ -1,5 +1,5 @@
 import React from 'react'
-import newsimg from  "../../../assets/newsimg.avif"
+import newsimg from  "../../../assets/luffy.png"
 export default 
 function Melumnews()
 {

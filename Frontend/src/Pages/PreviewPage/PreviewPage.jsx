@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import luffy from "../../assets/luffy.png";
-import newsimg from "../../assets/newsimg.avif";
+import newsimg from "../../assets/luffy.png";
 import { IoSearchSharp, IoSettingsOutline } from "react-icons/io5";
 import { IoMdNotificationsOutline } from "react-icons/io";
 import { BiWorld } from "react-icons/bi";
