@@ -1,6 +1,6 @@
+import "./loadEnv.js";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
@@ -13,8 +13,6 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import News from "./models/News.js";
 import { resolvePublicOrigin } from "./utils/publicOrigin.js";
-
-dotenv.config();
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
