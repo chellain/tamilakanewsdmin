@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import News from "../models/News.js";
 import Progress from "../models/Progress.js";
 
@@ -94,9 +93,8 @@ const serializeNewsMedia = (news, req) => {
   };
 };
 
-const isObjectId = (value) => {
-  return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
-};
+const isObjectId = (value) =>
+  typeof value === "string" && /^[a-fA-F0-9]{24}$/.test(value.trim());
 
 const buildNewsQuery = (idParam) => {
   if (isObjectId(idParam)) {
