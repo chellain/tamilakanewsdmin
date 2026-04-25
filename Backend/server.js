@@ -14,7 +14,6 @@ import progressRoutes from "./routes/progressRoutes.js";
 import News from "./models/News.js";
 
 dotenv.config();
-connectDB();
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -302,12 +301,23 @@ app.get("/api/og-image", ogImageHandler);
 const PORT = Number(process.env.PORT || 5000);
 const PUBLIC_PORT = Number(process.env.PUBLIC_PORT || 0);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
 
-if (PUBLIC_PORT && PUBLIC_PORT !== PORT) {
-  app.listen(PUBLIC_PORT, () => {
-    console.log(`Server also listening on port ${PUBLIC_PORT}`);
-  });
-}
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+
+    if (PUBLIC_PORT && PUBLIC_PORT !== PORT) {
+      app.listen(PUBLIC_PORT, () => {
+        console.log(`Server also listening on port ${PUBLIC_PORT}`);
+      });
+    }
+  } catch (error) {
+    console.error("Server startup failed:", error.stack || error.message || error);
+    process.exit(1);
+  }
+};
+
+startServer();
