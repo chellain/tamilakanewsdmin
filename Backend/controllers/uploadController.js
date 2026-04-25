@@ -4,6 +4,8 @@ import { fileURLToPath } from "url";
 import sharp from "sharp";
 import { buildPublicUrl } from "../utils/publicOrigin.js";
 
+console.log("PUBLIC_ORIGIN env:", process.env.PUBLIC_ORIGIN || "(not set)");
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsRoot = path.join(__dirname, "..", "uploads");
