@@ -198,7 +198,8 @@ const buildOgImageUrl = (backendOrigin, newsPath) => {
 const ogPreviewHandler = async (req, res) => {
   const { newsPath } = parseNewsPath(req.query.path);
   const userSiteOrigin = (process.env.USER_SITE_ORIGIN || "https://tamilakanews.com").replace(/\/$/, "");
-  const backendOrigin = `${req.protocol}://${req.get("host")}`;
+  // Change this line to force HTTPS:
+  const backendOrigin = `https://${req.get("host")}`;
   const pageUrl = `${userSiteOrigin}${newsPath}`;
 
   try {
@@ -249,7 +250,8 @@ const ogPreviewHandler = async (req, res) => {
 
 const ogImageHandler = async (req, res) => {
   const { newsPath } = parseNewsPath(req.query.path);
-  const backendOrigin = `${req.protocol}://${req.get("host")}`;
+  // Change this line to force HTTPS:
+  const backendOrigin = `https://${req.get("host")}`;
 
   try {
     const news = await findNewsByPath(newsPath);
