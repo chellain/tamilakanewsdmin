@@ -12,12 +12,15 @@ import newsPageConfigRoutes from "./routes/newsPageConfigRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import News from "./models/News.js";
+import { resolvePublicOrigin } from "./utils/publicOrigin.js";
 
 dotenv.config();
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+app.set("trust proxy", true);
 
 const trimToWords = (text, maxWords = 8) => {
   if (!text) return "";
@@ -197,8 +200,7 @@ const buildOgImageUrl = (backendOrigin, newsPath) => {
 const ogPreviewHandler = async (req, res) => {
   const { newsPath } = parseNewsPath(req.query.path);
   const userSiteOrigin = (process.env.USER_SITE_ORIGIN || "https://tamilakanews.com").replace(/\/$/, "");
-  // Change this line to force HTTPS:
-  const backendOrigin = `https://${req.get("host")}`;
+  const backendOrigin = resolvePublicOrigin(req);
   const pageUrl = `${userSiteOrigin}${newsPath}`;
 
   try {
@@ -249,8 +251,7 @@ const ogPreviewHandler = async (req, res) => {
 
 const ogImageHandler = async (req, res) => {
   const { newsPath } = parseNewsPath(req.query.path);
-  // Change this line to force HTTPS:
-  const backendOrigin = `https://${req.get("host")}`;
+  const backendOrigin = resolvePublicOrigin(req);
 
   try {
     const news = await findNewsByPath(newsPath);

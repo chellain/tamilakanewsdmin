@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import sharp from "sharp";
+import { buildPublicUrl } from "../utils/publicOrigin.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,8 +16,6 @@ const ensureDir = (dirPath) => {
 };
 
 ensureDir(thumbDir);
-
-const buildBaseUrl = (req) => `${req.protocol}://${req.get("host")}`;
 
 const optimizeThumbnail = async (thumbnailFile) => {
   const originalThumbPath = thumbnailFile.path;
@@ -58,7 +57,7 @@ export const uploadThumbnail = async (req, res) => {
 
     return res.json({
       url: mediaPath,
-      publicUrl: `${buildBaseUrl(req)}${mediaPath}`,
+      publicUrl: buildPublicUrl(req, mediaPath),
     });
   } catch (err) {
     console.error("Thumbnail upload failed:", err);
@@ -79,11 +78,10 @@ export const uploadVideo = async (req, res) => {
 
   try {
     const webpName = await optimizeThumbnail(thumbnailFile);
-    const baseUrl = buildBaseUrl(req);
 
     return res.json({
-      videoUrl: `${baseUrl}/uploads/videos/${videoFile.filename}`,
-      thumbnailUrl: `${baseUrl}/uploads/thumbnails/${webpName}`,
+      videoUrl: buildPublicUrl(req, `/uploads/videos/${videoFile.filename}`),
+      thumbnailUrl: buildPublicUrl(req, `/uploads/thumbnails/${webpName}`),
     });
   } catch (err) {
     console.error("Thumbnail conversion failed:", err);

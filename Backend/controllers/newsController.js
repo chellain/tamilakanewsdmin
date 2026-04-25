@@ -1,29 +1,33 @@
 import News from "../models/News.js";
 import Progress from "../models/Progress.js";
-
-const buildBaseUrl = (req) => `${req.protocol}://${req.get("host")}`;
+import { buildPublicUrl } from "../utils/publicOrigin.js";
 
 const absolutizeUploadUrl = (value, req) => {
   if (typeof value !== "string") return value;
 
   const raw = value.trim();
-  if (
-    !raw ||
-    raw.startsWith("data:") ||
-    raw.startsWith("blob:") ||
-    /^https?:\/\//i.test(raw)
-  ) {
+  if (!raw || raw.startsWith("data:") || raw.startsWith("blob:")) {
     return raw;
   }
 
-  const baseUrl = buildBaseUrl(req);
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const url = new URL(raw);
+      if (url.pathname.startsWith("/uploads/")) {
+        return buildPublicUrl(req, `${url.pathname}${url.search}${url.hash}`);
+      }
+      return raw;
+    } catch (error) {
+      return raw;
+    }
+  }
 
   if (raw.startsWith("/uploads/")) {
-    return `${baseUrl}${raw}`;
+    return buildPublicUrl(req, raw);
   }
 
   if (raw.startsWith("uploads/")) {
-    return `${baseUrl}/${raw}`;
+    return buildPublicUrl(req, `/${raw}`);
   }
 
   return raw;
