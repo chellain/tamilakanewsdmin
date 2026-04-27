@@ -92,7 +92,6 @@ const getUniversalContainerDefaults = (containerType) => {
     "Normal Container Type 4B": { width: 300, height: 80, layout: 10 },
     "Normal Container Type 5": { width: 400, height: 200, layout: 4 },
     "Universal Container": { width: 400, height: 300, layout: 1 },
-    "Universal Container": { width: 400, height: 300, layout: 1 },
   };
   
   return configMap[containerType] || { width: 400, height: 300, layout: 1 };
