@@ -4,6 +4,14 @@ import { MdEdit } from "react-icons/md";
 import { FaPlay, FaYoutube, FaUpload } from "react-icons/fa";
 import { fileToWebPDataUrl } from "../../../utils/imageUtils";
 
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 /**
  * NewsVideoBox
  *
