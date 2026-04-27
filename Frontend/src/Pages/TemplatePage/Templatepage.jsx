@@ -10,8 +10,6 @@ import { HiMiniMoon } from "react-icons/hi2";
 import luffy from  "../../assets/luffy.png"
 import { useSelector, useDispatch } from 'react-redux';
 
-import { FaTimes } from "react-icons/fa";
-
 import { 
   setAllNews,
   setCurrentNews, 
@@ -79,13 +77,6 @@ export default function Templatepage() {
       }
     }
   }, [currentNews, dispatch]);
-
-  const toggleElementVisibility = (elementName) => {
-    setHiddenElements(prev => ({
-      ...prev,
-      [elementName]: !prev[elementName]
-    }));
-  };
 
   // ── Box management ───────────────────────────────────────────────────────
   const addBox = (type) => {
@@ -298,6 +289,8 @@ export default function Templatepage() {
         onActiveLangChange={setActiveLang}
         paragraphBoxes={paragraphBoxesForTranslation}
         onTranslatedParagraphs={handleTranslatedParagraphs}
+        hiddenElements={hiddenElements}
+        onHiddenElementsChange={setHiddenElements}
       />
       <div className='navcon1'>
         <div className='navcon2'>
@@ -332,40 +325,14 @@ export default function Templatepage() {
           <div className="ele-news">
             <div className="ele-const-news" style={{ border: '2px solid #e0e0e0', padding: '15px', borderRadius: '8px' }}>
               {!hiddenElements.zonar && (
-                <div 
-                  className="ele-const-zonar hideable-element" 
-                  style={{ position: 'relative', display: 'inline-block' }}
-                  onDoubleClick={() => toggleElementVisibility('zonar')}
-                >
+                <div className="ele-const-zonar">
                   {zonalLabel || "No category yet"}
-                  <div className="hide-btn-hover" style={{
-                    position: 'absolute', top: '-8px', right: '-8px',
-                    background: '#ff0059', color: 'white', borderRadius: '50%',
-                    width: '20px', height: '20px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', fontSize: '12px', opacity: 0, transition: 'opacity 0.2s'
-                  }}>
-                    <FaTimes />
-                  </div>
                 </div>
               )}
               
               {!hiddenElements.author && (
-                <div 
-                  className="ele-const-author hideable-element" 
-                  style={{ position: 'relative', display: 'inline-block' }}
-                  onDoubleClick={() => toggleElementVisibility('author')}
-                >
+                <div className="ele-const-author">
                   By: {formNewsData?.author || "Unknown Author"}
-                  <div className="hide-btn-hover" style={{
-                    position: 'absolute', top: '-8px', right: '-8px',
-                    background: '#ff0059', color: 'white', borderRadius: '50%',
-                    width: '20px', height: '20px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', fontSize: '12px', opacity: 0, transition: 'opacity 0.2s'
-                  }}>
-                    <FaTimes />
-                  </div>
                 </div>
               )}
               
@@ -373,22 +340,7 @@ export default function Templatepage() {
               <div className="ele-con-ne-oneliner">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{formNewsData?.oneLiner || "one liner is comming soon..."}</div>
               
               {!hiddenElements.thumbnail && (
-                <div 
-                  className="ele-con-tmbnl hideable-element" 
-                  style={{ position: 'relative' }}
-                  onDoubleClick={() => toggleElementVisibility('thumbnail')}
-                >
-                  <div className="hide-btn-hover" style={{
-                    position: 'absolute', top: '8px', right: '8px',
-                    background: '#ff0059', color: 'white', borderRadius: '50%',
-                    width: '24px', height: '24px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', fontSize: '14px', opacity: 0,
-                    transition: 'opacity 0.2s', zIndex: 10
-                  }}>
-                    <FaTimes />
-                  </div>
-                  
+                <div className="ele-con-tmbnl">
                   {(() => {
                     const thumb = formNewsData?.thumbnail;
                     let finalThumb = null;

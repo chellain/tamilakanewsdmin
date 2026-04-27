@@ -19,7 +19,7 @@ import { getLayout } from "./Api/layoutApi";
 import { getAdminConfig } from "./Api/adminApi";
 import { getNewsPageConfig } from "./Api/newsPageApi";
 import { getUsers } from "./Api/userApi";
-import { setAllNews } from "./Pages/Slice/newsformSlice.js";
+import { setAllNews, setNewsLoaded } from "./Pages/Slice/newsformSlice.js";
 import { setLayoutHydrated, setLayoutState } from "./Pages/Slice/editpaperSlice/editpaperslice.js";
 import { setAdminConfig } from "./Pages/Slice/adminSlice.js";
 import { setUsers } from "./Pages/Slice/userSlice.js";
@@ -50,6 +50,7 @@ function App() {
     if (!authToken) return;
 
     const loadInitialData = async () => {
+      dispatch(setNewsLoaded(false));
       const usersPromise = getUsers();
 
       const [newsRes, layoutRes, adminRes, newsPageRes, usersRes] = await Promise.allSettled([
@@ -62,6 +63,8 @@ function App() {
 
       if (newsRes.status === "fulfilled" && Array.isArray(newsRes.value)) {
         dispatch(setAllNews(newsRes.value));
+      } else {
+        dispatch(setNewsLoaded(true));
       }
 
       if (layoutRes.status === "fulfilled" && layoutRes.value) {

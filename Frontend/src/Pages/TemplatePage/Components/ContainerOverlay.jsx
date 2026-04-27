@@ -4,6 +4,31 @@ import ImageBox from './ImageBox.jsx';
 import ParagraphBox from './ParagraphBox.jsx';
 import NewsVideoBox from './NewsVideoBox.jsx';   // ← NEW
 
+const railStyle = {
+  position: "absolute",
+  top: 0,
+  left: "18px",
+  transform: "translateY(-50%)",
+  display: "flex",
+  flexDirection: "row",
+  gap: "8px",
+  zIndex: 20
+};
+
+const railButtonStyle = (background, color = "white") => ({
+  width: "30px",
+  height: "30px",
+  borderRadius: "999px",
+  border: "2px solid rgba(255, 255, 255, 0.9)",
+  background,
+  color,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  boxShadow: "0 8px 20px rgba(45, 27, 56, 0.18)",
+});
+
 const defaultSettings = {
   columns: 1,
   gap: 0,
@@ -102,6 +127,8 @@ export default function ContainerOverlay({
     onUpdate(id, updatedSettings);
   };
 
+  const hasBoxes = settings.boxes.length > 0;
+
   return (
     <div style={{ position: 'relative', height: '100%' }}>
       <div
@@ -111,56 +138,26 @@ export default function ContainerOverlay({
           border: '2px dashed #667eea',
           borderRadius: '8px',
           padding: `${settings.padding}px`,
-          minHeight: '200px',
-          height: '100%',
+          minHeight: hasBoxes ? '0' : '200px',
+          height: 'auto',
           position: 'relative',
-          background: 'rgba(102, 126, 234, 0.05)'
+          background: 'rgba(102, 126, 234, 0.05)',
+          overflow: 'visible'
         }}
       >
         {/* ── Top-right control buttons ──────────────────────────── */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            display: 'flex',
-            gap: '8px',
-            zIndex: 10
-          }}
-        >
+        <div style={railStyle}>
           <button
             onClick={handleEditClick}
-            style={{
-              background: '#667eea',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              width: '28px',
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
+            style={railButtonStyle("#f1fff5", "#17914a")}
+            title="Edit container"
           >
             <FaEdit />
           </button>
           <button
             onDoubleClick={handleDelete}
-            style={{
-              background: '#ff0059',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              width: '28px',
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
+            style={railButtonStyle("#fff1f4", "#d90445")}
+            title="Double-click to delete"
           >
             <FaTimes />
           </button>
@@ -245,7 +242,8 @@ export default function ContainerOverlay({
             display: 'grid',
             gridTemplateColumns: `repeat(${settings.columns}, 1fr)`,
             gap: `${settings.gap}px`,
-            minHeight: '150px'
+            minHeight: hasBoxes ? '0' : '150px',
+            alignItems: 'start'
           }}
         >
           {settings.boxes.length === 0 ? (
@@ -259,7 +257,7 @@ export default function ContainerOverlay({
             </div>
           ) : (
             settings.boxes.map((box) => (
-              <div key={box.id}>
+              <div key={box.id} style={{ alignSelf: 'start' }}>
                 {box.type === 'paragraph' && (
                   <ParagraphBox
                     id={box.id}

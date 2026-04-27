@@ -48,6 +48,7 @@ const syncTranslatedNews = (state) => {
 const initialState = {
   MLayout: 1,
   allNews: [],
+  newsLoaded: false,
   trash: [],
   currentNews: null,
   language: "ta",
@@ -58,8 +59,13 @@ const newsFormSlice = createSlice({
   name: "newsform",
   initialState,
   reducers: {
+    setNewsLoaded: (state, action) => {
+      state.newsLoaded = Boolean(action.payload);
+    },
+
     setAllNews: (state, action) => {
       state.allNews = Array.isArray(action.payload) ? action.payload : [];
+      state.newsLoaded = true;
       syncTranslatedNews(state);
     },
 
@@ -303,6 +309,7 @@ const newsFormSlice = createSlice({
 });
 
 export const {
+  setNewsLoaded,
   setAllNews,
   saveNews,
   updateNews,

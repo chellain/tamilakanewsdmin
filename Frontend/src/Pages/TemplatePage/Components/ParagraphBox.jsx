@@ -1,185 +1,122 @@
-import React from 'react'
-import { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import { FaCheck, FaEdit, FaTimes } from "react-icons/fa";
-import { Rnd } from "react-rnd";
 
-export default function ParagraphBox({ id, onDelete, onUpdate, initialContent, box, isInContainer = false, contentKey = "content" }) {
+const buildControlRailStyle = (side = "right", vertical = "bottom") => ({
+  position: "absolute",
+  [vertical]: 0,
+  [side]: "18px",
+  transform: `translateY(${vertical === "bottom" ? "50%" : "-50%"})`,
+  display: "flex",
+  flexDirection: "row",
+  gap: "8px",
+  zIndex: 10,
+});
+
+const buildControlButtonStyle = (background, color) => ({
+  width: "30px",
+  height: "30px",
+  borderRadius: "999px",
+  border: "2px solid rgba(255, 255, 255, 0.94)",
+  background,
+  color,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  boxShadow: "0 8px 20px rgba(45, 27, 56, 0.18)",
+});
+
+const shellStyle = {
+  border: "2px dashed #555",
+  background: "#fff",
+  borderRadius: "8px",
+  padding: "8px",
+  paddingBottom: "44px",
+  position: "relative",
+  width: "100%",
+  overflow: "visible",
+};
+
+export default function ParagraphBox({
+  id,
+  onDelete,
+  onUpdate,
+  initialContent,
+  isInContainer = false,
+  contentKey = "content",
+}) {
   const [text, setText] = useState(initialContent || "");
   const [editing, setEditing] = useState(true);
-  
+  const lastDeleteClickRef = useRef(0);
+
   useEffect(() => {
     setText(initialContent || "");
   }, [initialContent, contentKey]);
 
-  const handleDragStart = (e) => {
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("boxId", id.toString());
-    e.dataTransfer.setData("boxType", "paragraph");
-  };
-
   useEffect(() => {
     onUpdate(id, { [contentKey]: text });
-  }, [text]);
-   
-  if (isInContainer) {
-    return (
-      <div
-        style={{
-          border: "2px dashed #555",
-          background: "#fff",
-          borderRadius: "8px",
-          padding: "8px",
-          position: "relative",
-          width: "100%",
-          minHeight: "100px"
-        }}
-      >
-        <FaTimes
-          color="red"
-          className="para-cls-btn"
-          style={{
-            position: "absolute",
-            top: "auto",
-            bottom: 5,
-            left: 5,
-            background: "white",
-            padding: "4px",
-            borderRadius: "100%",
-            cursor: "pointer",
-            boxShadow: "0 0 8px rgba(0,0,0,0.2)",
-            fontSize: "23px",
-            zIndex: 10
-          }}
-          onDoubleClick={() => onDelete(id)}
-        />
+  }, [contentKey, id, onUpdate, text]);
 
-        {editing ? (
-          <div style={{ display: "flex", gap: "6px" }}>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Enter text..."
-              style={{ width: "100%", height: "100px", resize: "vertical" }}
-            />
-            <FaCheck
-              color="green"
-              style={{
-                position: "absolute",
-                cursor: "pointer",
-                top: "auto",
-                bottom: 5,
-                left: 30,
-                background: "rgba(238, 255, 232, 1)",
-                padding: "5px",
-                borderRadius: "100%",
-                boxShadow: "0 0 8px rgba(0,0,0,0.2)",
-                fontSize: "23px",
-                zIndex: 10
-              }}
-              onClick={() => setEditing(false)}
-            />
-          </div>
-        ) : (
-          <div>
-            <p style={{ whiteSpace: "pre-wrap" }}>{text}</p>
-            <FaEdit
-              style={{
-                position: "absolute",
-                cursor: "pointer",
-                top: "auto",
-                bottom: 5,
-                left: 30,
-                background: "rgba(238, 255, 232, 1)",
-                padding: "4px",
-                borderRadius: "100%",
-                boxShadow: "0 0 8px rgba(0,0,0,0.2)",
-                fontSize: "23px",
-                color: "green",
-                zIndex: 10
-              }}
-              onClick={() => setEditing(true)}
-            />
-          </div>
-        )}
-      </div>
-    );
-  }
+  const handleDeleteAttempt = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const now = Date.now();
+    if (now - lastDeleteClickRef.current <= 350) {
+      onDelete(id);
+      lastDeleteClickRef.current = 0;
+      return;
+    }
+
+    lastDeleteClickRef.current = now;
+  };
+
+  const minHeight = isInContainer ? "100px" : "150px";
+  const textareaHeight = isInContainer ? "100px" : "200px";
 
   return (
-    <div
-    style={{
-      border: "2px dashed #555",
-      background: "#fff",
-      borderRadius: "8px",
-      padding: "8px",
-      position: "relative",
-      width: "100%",
-      minHeight: "150px"
-    }}
-  >
-      <FaTimes
-        color="red"
-        className="para-cls-btn"
-        style={{
-          position: "absolute",
-          top: "auto",
-          bottom: 5,
-          left: 5,
-          background: "white",
-          padding: "4px",
-          borderRadius: "100%",
-          cursor: "pointer",
-          boxShadow: "0 0 8px rgba(0,0,0,0.2)",
-          fontSize: "23px"
-        }}
-        onDoubleClick={() => onDelete(id)}
-      />
+    <div style={{ ...shellStyle, minHeight }}>
+      <div style={buildControlRailStyle("right", "bottom")}>
+        {editing ? (
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            style={buildControlButtonStyle("#eff8ff", "#2563eb")}
+            title="Save text"
+          >
+            <FaCheck />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            style={buildControlButtonStyle("#eff8ff", "#2563eb")}
+            title="Edit text"
+          >
+            <FaEdit />
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={handleDeleteAttempt}
+          onDoubleClick={handleDeleteAttempt}
+          style={buildControlButtonStyle("#fff1f4", "#d90445")}
+          title="Double-click to delete"
+        >
+          <FaTimes />
+        </button>
+      </div>
 
       {editing ? (
-        <div style={{ display: "flex", gap: "6px" }}>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Enter text..."
-            style={{ width: "100%", height: "200px" }}
-          />
-          <FaCheck
-            color="green"
-            style={{
-              position: "absolute",
-              cursor: "pointer",
-              top: "auto",
-              bottom: 5,
-              left: 30,
-              background: "rgba(238, 255, 232, 1)",
-              padding: "5px",
-              borderRadius: "100%",
-              boxShadow: "0 0 8px rgba(0,0,0,0.2)",
-              fontSize: "23px"
-            }}
-            onClick={() => setEditing(false)}
-          />
-        </div>
+        <textarea
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder="Enter text..."
+          style={{ width: "100%", height: textareaHeight, resize: "vertical" }}
+        />
       ) : (
-        <div>
-          <p style={{ whiteSpace: "pre-wrap" }}>{text}</p>
-          <FaEdit
-            style={{
-              position: "absolute",
-              cursor: "pointer",
-              top: "auto",
-              bottom: 5,
-              left: 30,
-              background: "rgba(238, 255, 232, 1)",
-              padding: "4px",
-              borderRadius: "100%",
-              boxShadow: "0 0 8px rgba(0,0,0,0.2)",
-              fontSize: "23px",
-              color: "green"
-            }}
-            onClick={() => setEditing(true)}
-          />
-        </div>
+        <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{text}</p>
       )}
     </div>
   );

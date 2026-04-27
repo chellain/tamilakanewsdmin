@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Rnd } from "react-rnd";
 import { AiOutlineSlack } from "react-icons/ai";
-import { FaTimes, FaVideo, FaImage, FaParagraph } from "react-icons/fa";
+import { FaImage, FaParagraph, FaTimes, FaVideo } from "react-icons/fa";
 import { BiGridAlt } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { fileToWebPDataUrl } from "../../utils/imageUtils";
@@ -32,7 +32,6 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
-
 export default function Newsform({
   initialData = null,
   onChange = () => {},
@@ -41,6 +40,8 @@ export default function Newsform({
   onActiveLangChange = () => {},
   paragraphBoxes = [],
   onTranslatedParagraphs = () => {},
+  hiddenElements = { thumbnail: false, author: false, zonar: false },
+  onHiddenElementsChange = () => {},
 }) {
   const [tamilBuffer, setTamilBuffer] = useState(emptyFormData());
   const [englishBuffer, setEnglishBuffer] = useState(null);
@@ -48,6 +49,7 @@ export default function Newsform({
   const [openForm, setOpenForm] = useState(false);
   const allPages = useSelector((state) => state.admin.allPages || []);
   const [categoryPage, setCategoryPage] = useState(0);
+  const [districtPage, setDistrictPage] = useState(0);
 
   const categoryOptions = Array.from(
     new Set(
@@ -59,15 +61,30 @@ export default function Newsform({
             !page.districts
         )
         .map((page) => page.name.eng)
+        .filter(Boolean)
+    )
+  );
+
+  const districtOptions = Array.from(
+    new Set(
+      allPages
+        .find((page) => Array.isArray(page?.districts))
+        ?.districts?.map((district) => district?.eng)
+        ?.filter(Boolean) || []
     )
   );
 
   const selectedCategories = normalizeCategories(tamilBuffer.zonal);
   const pageSize = 8;
   const totalCategoryPages = Math.max(1, Math.ceil(categoryOptions.length / pageSize));
+  const totalDistrictPages = Math.max(1, Math.ceil(districtOptions.length / pageSize));
   const pagedCategories = categoryOptions.slice(
     categoryPage * pageSize,
     categoryPage * pageSize + pageSize
+  );
+  const pagedDistricts = districtOptions.slice(
+    districtPage * pageSize,
+    districtPage * pageSize + pageSize
   );
 
   const hasEnglishBuffer = englishBuffer !== null;
@@ -82,33 +99,38 @@ export default function Newsform({
       : tamilBuffer;
 
   useEffect(() => {
-    if (initialData) {
-      const data = initialData.data || emptyFormData();
-      const normalizedData = {
-        ...data,
-        zonal: normalizeCategories(data.zonal),
+    if (!initialData) return;
+
+    const data = initialData.data || emptyFormData();
+    const normalizedData = {
+      ...data,
+      zonal: normalizeCategories(data.zonal),
+    };
+
+    setTamilBuffer((prev) => ({ ...emptyFormData(), ...prev, ...normalizedData }));
+
+    if (initialData.dataEn) {
+      const normalizedEn = {
+        ...initialData.dataEn,
+        zonal: normalizeCategories(initialData.dataEn.zonal),
       };
-      setTamilBuffer((prev) => ({ ...emptyFormData(), ...prev, ...normalizedData }));
-      if (initialData.dataEn) {
-        const normalizedEn = {
-          ...initialData.dataEn,
-          zonal: normalizeCategories(initialData.dataEn.zonal),
-        };
-        setEnglishBuffer((prev) => ({ ...emptyFormData(), ...prev, ...normalizedEn }));
-      } else {
-        setEnglishBuffer(null);
-      }
-      if (data.thumbnail) {
-        try {
-          if (typeof data.thumbnail === "string") {
-            setThumbnailPreview(resolveMediaUrl(data.thumbnail));
-          } else {
-            setThumbnailPreview(URL.createObjectURL(data.thumbnail));
-          }
-        } catch (e) {
-          console.log(e);
+      setEnglishBuffer((prev) => ({ ...emptyFormData(), ...prev, ...normalizedEn }));
+    } else {
+      setEnglishBuffer(null);
+    }
+
+    if (data.thumbnail) {
+      try {
+        if (typeof data.thumbnail === "string") {
+          setThumbnailPreview(resolveMediaUrl(data.thumbnail));
+        } else {
+          setThumbnailPreview(URL.createObjectURL(data.thumbnail));
         }
+      } catch (error) {
+        console.log(error);
       }
+    } else {
+      setThumbnailPreview(null);
     }
   }, [initialData]);
 
@@ -117,6 +139,12 @@ export default function Newsform({
       setCategoryPage(0);
     }
   }, [categoryPage, totalCategoryPages]);
+
+  useEffect(() => {
+    if (districtPage >= totalDistrictPages) {
+      setDistrictPage(0);
+    }
+  }, [districtPage, totalDistrictPages]);
 
   useEffect(() => {
     if (!hasEnglishBuffer) return;
@@ -136,21 +164,25 @@ export default function Newsform({
   }, [tamilBuffer.thumbnail, tamilBuffer.images, tamilBuffer.zonal, hasEnglishBuffer]);
 
   const notifyChange = useCallback(() => {
-    onChange({ tamil: { ...tamilBuffer }, english: englishBuffer ? { ...englishBuffer } : null });
+    onChange({
+      tamil: { ...tamilBuffer },
+      english: englishBuffer ? { ...englishBuffer } : null,
+    });
   }, [tamilBuffer, englishBuffer, onChange]);
 
   useEffect(() => {
     notifyChange();
-  }, [tamilBuffer, englishBuffer, notifyChange]);
+  }, [notifyChange]);
 
-  const handleChange = async (e) => {
-    const { name, value, files } = e.target;
+  const handleChange = async (event) => {
+    const { name, value, files } = event.target;
     if (activeLang === "en" && (name === "thumbnail" || name === "zonal")) {
       return;
     }
 
     if (files && files[0]) {
       const file = files[0];
+
       try {
         let nextValue = null;
 
@@ -185,6 +217,7 @@ export default function Newsform({
         console.error(`Failed to process ${name}:`, error);
         alert(`Failed to upload ${name}. Please try again.`);
       }
+
       return;
     }
 
@@ -208,11 +241,16 @@ export default function Newsform({
     setTamilBuffer((prev) => {
       const current = normalizeCategories(prev.zonal);
       const exists = current.includes(value);
-      const next = exists
-        ? current.filter((c) => c !== value)
-        : [...current, value];
+      const next = exists ? current.filter((item) => item !== value) : [...current, value];
       return { ...prev, zonal: next };
     });
+  };
+
+  const toggleVisibilityOption = (key) => {
+    onHiddenElementsChange((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   };
 
   const switchToEnglishWithEmpty = useCallback(() => {
@@ -223,57 +261,51 @@ export default function Newsform({
       zonal: tamilBuffer.zonal,
     };
     setEnglishBuffer(emptyEn);
-    const emptyParagraphs = paragraphBoxes.map((b) => ({ id: b.id, contentEn: "" }));
+    const emptyParagraphs = paragraphBoxes.map((box) => ({ id: box.id, contentEn: "" }));
     onTranslatedParagraphs(emptyParagraphs);
     onActiveLangChange("en");
-  }, [tamilBuffer.thumbnail, tamilBuffer.images, tamilBuffer.zonal, paragraphBoxes, onTranslatedParagraphs, onActiveLangChange]);
+  }, [
+    tamilBuffer.thumbnail,
+    tamilBuffer.images,
+    tamilBuffer.zonal,
+    paragraphBoxes,
+    onTranslatedParagraphs,
+    onActiveLangChange,
+  ]);
 
-  const handleSwitchToTamil = () => {
-    onActiveLangChange("ta");
-  };
-
-  const handleSwitchToEnglish = () => {
-    if (englishBuffer) {
-      onActiveLangChange("en");
-    } else {
-      switchToEnglishWithEmpty();
-    }
-  };
-
-  const submit = (e) => {
-    e && e.preventDefault();
-    
-    // Get current form data based on active language
-    const currentFormData = activeLang === "en" && englishBuffer ? englishBuffer : tamilBuffer;
-    
+  const submit = (event) => {
+    event?.preventDefault();
     try {
-      onSave(currentFormData);
-      console.log('onSave called successfully with:', currentFormData);
+      onSave(activeLang === "en" && englishBuffer ? englishBuffer : tamilBuffer);
     } catch (error) {
-      console.error('Error in submit function:', error);
-      alert('Error saving news: ' + error.message);
+      console.error("Error in submit function:", error);
+      alert(`Error saving news: ${error.message}`);
     }
   };
 
-  const handleContainerDragStart = (e) => {
-    e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("container-overlay", "true");
+  const handleContainerDragStart = (event) => {
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("container-overlay", "true");
   };
 
-  const handleParagraphDragStart = (e) => {
-    e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("add-box-type", "paragraph");
+  const handleParagraphDragStart = (event) => {
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("add-box-type", "paragraph");
   };
 
-  const handleImageDragStart = (e) => {
-    e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("add-box-type", "image");
+  const handleImageDragStart = (event) => {
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("add-box-type", "image");
   };
 
-  // ── NEW: drag handler for video box ──────────────────────────────────────
-  const handleVideoDragStart = (e) => {
-    e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("add-box-type", "video");
+  const handleVideoDragStart = (event) => {
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("add-box-type", "video");
+  };
+
+  const renderSelectionRange = (page, total) => {
+    if (total === 0) return "0 items";
+    return `${Math.min(page * pageSize + 1, total)}-${Math.min((page + 1) * pageSize, total)} of ${total}`;
   };
 
   return (
@@ -296,20 +328,15 @@ export default function Newsform({
 
       {openForm && (
         <Rnd
-          default={{ x: 1000, y: 0, width: 520, height: 700 }}
+          default={{ x: 1000, y: 0, width: 520, height: 760 }}
           bounds="window"
           dragHandleClassName="drag-header"
           className="newsform-panel"
           style={{ zIndex: 9999 }}
         >
-          <div
-            className="drag-header"
-          >
+          <div className="drag-header">
             <span>News Form</span>
-            <FaTimes
-              style={{ cursor: "pointer", color: "red" }}
-              onClick={() => setOpenForm(false)}
-            />
+            <FaTimes style={{ cursor: "pointer", color: "red" }} onClick={() => setOpenForm(false)} />
           </div>
 
           <div className="newsform-con">
@@ -319,14 +346,20 @@ export default function Newsform({
                 <div className="newsform-lang-buttons">
                   <button
                     type="button"
-                    onClick={handleSwitchToTamil}
+                    onClick={() => onActiveLangChange("ta")}
                     className={`newsform-lang-btn${activeLang === "ta" ? " is-active" : ""}`}
                   >
                     Tamil
                   </button>
                   <button
                     type="button"
-                    onClick={handleSwitchToEnglish}
+                    onClick={() => {
+                      if (englishBuffer) {
+                        onActiveLangChange("en");
+                      } else {
+                        switchToEnglishWithEmpty();
+                      }
+                    }}
                     className={`newsform-lang-btn${activeLang === "en" ? " is-active" : ""}`}
                   >
                     English
@@ -399,11 +432,7 @@ export default function Newsform({
                       <video
                         src={thumbnailPreview}
                         controls
-                        style={{
-                          width: "100%",
-                          maxHeight: "200px",
-                          borderRadius: "8px",
-                        }}
+                        style={{ width: "100%", maxHeight: "200px", borderRadius: "8px" }}
                       >
                         Your browser does not support the video tag.
                       </video>
@@ -420,19 +449,19 @@ export default function Newsform({
 
               <div className="form-group newsform-category-group">
                 <div className="newsform-category-header">
-                  <label className="form-label">Category</label>
+                  <label className="form-label">Category and District</label>
                   <div className="newsform-selected-tags">
                     {selectedCategories.length === 0 && (
-                      <span className="newsform-tag is-empty">No category selected</span>
+                      <span className="newsform-tag is-empty">No selection yet</span>
                     )}
-                    {selectedCategories.map((cat) => (
-                      <span key={cat} className="newsform-tag">
-                        {cat}
+                    {selectedCategories.map((category) => (
+                      <span key={category} className="newsform-tag">
+                        {category}
                         {activeLang !== "en" && (
                           <button
                             type="button"
                             className="newsform-tag-remove"
-                            onClick={() => toggleCategory(cat)}
+                            onClick={() => toggleCategory(category)}
                           >
                             x
                           </button>
@@ -442,51 +471,124 @@ export default function Newsform({
                   </div>
                 </div>
 
-                <div className={`newsform-category-grid${activeLang === "en" ? " is-disabled" : ""}`}>
-                  {categoryOptions.length === 0 && (
-                    <div className="newsform-empty">No categories configured.</div>
-                  )}
-                  {pagedCategories.map((cat) => {
-                    const checked = selectedCategories.includes(cat);
-                    return (
-                      <label
-                        key={cat}
-                        className={`newsform-category-tile${checked ? " is-checked" : ""}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleCategory(cat)}
-                          disabled={activeLang === "en"}
-                        />
-                        <span>{cat}</span>
-                      </label>
-                    );
-                  })}
+                <div className="newsform-selection-section">
+                  <div className="newsform-selection-heading">Pages</div>
+                  <div className={`newsform-category-grid${activeLang === "en" ? " is-disabled" : ""}`}>
+                    {categoryOptions.length === 0 && (
+                      <div className="newsform-empty">No categories configured.</div>
+                    )}
+                    {pagedCategories.map((category) => {
+                      const checked = selectedCategories.includes(category);
+                      return (
+                        <label
+                          key={category}
+                          className={`newsform-category-tile${checked ? " is-checked" : ""}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleCategory(category)}
+                            disabled={activeLang === "en"}
+                          />
+                          <span>{category}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="newsform-category-footer">
+                    <span className="newsform-category-count">
+                      {renderSelectionRange(categoryPage, categoryOptions.length)}
+                    </span>
+                    <button
+                      type="button"
+                      className="newsform-category-next"
+                      onClick={() => setCategoryPage((prev) => (prev + 1) % totalCategoryPages)}
+                      disabled={categoryOptions.length <= pageSize}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
 
-                <div className="newsform-category-footer">
-                  <span className="newsform-category-count">
-                    {categoryOptions.length > 0
-                      ? `${Math.min(categoryPage * pageSize + 1, categoryOptions.length)}-${Math.min(
-                          (categoryPage + 1) * pageSize,
-                          categoryOptions.length
-                        )} of ${categoryOptions.length}`
-                      : "0 categories"}
-                  </span>
-                  <button
-                    type="button"
-                    className="newsform-category-next"
-                    onClick={() => setCategoryPage((prev) => (prev + 1) % totalCategoryPages)}
-                    disabled={categoryOptions.length <= pageSize}
-                    title="Next categories"
-                  >
-                    ⟶
-                  </button>
+                <div className="newsform-selection-divider" />
+
+                <div className="newsform-selection-section">
+                  <div className="newsform-selection-heading">Districts</div>
+                  <div className={`newsform-category-grid${activeLang === "en" ? " is-disabled" : ""}`}>
+                    {districtOptions.length === 0 && (
+                      <div className="newsform-empty">No districts configured.</div>
+                    )}
+                    {pagedDistricts.map((district) => {
+                      const checked = selectedCategories.includes(district);
+                      return (
+                        <label
+                          key={district}
+                          className={`newsform-category-tile${checked ? " is-checked" : ""}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleCategory(district)}
+                            disabled={activeLang === "en"}
+                          />
+                          <span>{district}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="newsform-category-footer">
+                    <span className="newsform-category-count">
+                      {renderSelectionRange(districtPage, districtOptions.length)}
+                    </span>
+                    <button
+                      type="button"
+                      className="newsform-category-next"
+                      onClick={() => setDistrictPage((prev) => (prev + 1) % totalDistrictPages)}
+                      disabled={districtOptions.length <= pageSize}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
+
                 {activeLang === "en" && (
-                  <div className="newsform-note">Switch to Tamil to edit categories.</div>
+                  <div className="newsform-note">Switch to Tamil to edit categories and districts.</div>
                 )}
+              </div>
+
+              <div className="form-group newsform-visibility-group">
+                <label className="form-label">Visible in template</label>
+                <div className="newsform-visibility-grid">
+                  <label className="newsform-visibility-option">
+                    <input
+                      type="checkbox"
+                      checked={!hiddenElements.thumbnail}
+                      onChange={() => toggleVisibilityOption("thumbnail")}
+                    />
+                    <span>Thumbnail</span>
+                  </label>
+                  <label className="newsform-visibility-option">
+                    <input
+                      type="checkbox"
+                      checked={!hiddenElements.author}
+                      onChange={() => toggleVisibilityOption("author")}
+                    />
+                    <span>Author</span>
+                  </label>
+                  <label className="newsform-visibility-option">
+                    <input
+                      type="checkbox"
+                      checked={!hiddenElements.zonar}
+                      onChange={() => toggleVisibilityOption("zonar")}
+                    />
+                    <span>Category</span>
+                  </label>
+                </div>
+                <div className="newsform-note">
+                  Use these checkboxes to show or hide the template elements directly from the form.
+                </div>
               </div>
 
               <div className="form-group">
@@ -517,40 +619,23 @@ export default function Newsform({
                     lineHeight: "1.4",
                   }}
                 >
-                  Drag this to organize paragraphs and images in a grid layout
+                  Drag this to organize paragraphs and images in a grid layout.
                 </p>
               </div>
 
-              {/* ── Add content items row ────────────────────────────────── */}
               <div className="add-pi newsform-add-row">
-                <div
-                  className="newsform-add-btn"
-                  draggable
-                  onDragStart={handleParagraphDragStart}
-                  style={{ cursor: "move" }}
-                >
+                <div className="newsform-add-btn" draggable onDragStart={handleParagraphDragStart}>
                   <FaParagraph size={14} />
                   Add Paragraph
                 </div>
-                <div
-                  className="newsform-add-btn"
-                  draggable
-                  onDragStart={handleImageDragStart}
-                  style={{ cursor: "move" }}
-                >
+                <div className="newsform-add-btn" draggable onDragStart={handleImageDragStart}>
                   <FaImage size={14} />
                   Add Image
                 </div>
-
-                {/* ── NEW: Add Video button ───────────────────────────────── */}
                 <div
                   className="newsform-add-btn"
                   draggable
                   onDragStart={handleVideoDragStart}
-                  style={{
-                    cursor: "move",
-                    userSelect: "none",
-                  }}
                   title="Drag onto the canvas or into a Container Overlay"
                 >
                   <FaVideo size={13} />

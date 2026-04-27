@@ -140,6 +140,7 @@ export const nestedReducers = {
         slotId: slotId || nanoid(),
         newsId: null,
         containerType,
+        ...(presetId && { presetId }),
         showSeparator: false,
         shfval: presetShfval || 1,
         ...(containerType === "Universal Container" && {

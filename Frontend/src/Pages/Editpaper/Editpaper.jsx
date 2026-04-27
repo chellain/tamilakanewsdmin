@@ -1,53 +1,45 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AiFillGitlab } from "react-icons/ai";
-import { BiCube } from "react-icons/bi";
-import NewsFilter from "./Components/NewsFilter";
 import PageEditor from "./Components/PageEditor";
 import EditableContainer from "./Components/EditableContainer";
 import EditorSettings from "./Components/EditorSettings";
 import EditableLine from "./Containers_/EditableLine";
 import Navbarr from "../Newspaper/Components/Navbarr";
 import { saveLayout } from "../../Api/layoutApi";
-
 import { useDispatch, useSelector } from "react-redux";
-import { 
-  addContainer,
-  addLine,
-} from "../Slice/editpaperSlice/editpaperslice";
-
+import { addContainer, addLine } from "../Slice/editpaperSlice/editpaperslice";
 import "./editpapercss.scss";
 
 export default function Editpaper() {
   const dispatch = useDispatch();
-  const layoutState = useSelector(state => state.editpaper);
+  const layoutState = useSelector((state) => state.editpaper);
   const { pages, activePage, activeLineId, hydrated } = layoutState;
 
   const saveTimeoutRef = useRef(null);
   const skipFirstSaveRef = useRef(true);
 
-  const currentPage = pages.find(p => p.catName === activePage);
+  const currentPage = pages.find((page) => page.catName === activePage);
   const containers = currentPage?.containers || [];
   const lines = currentPage?.lines || [];
-  const pageSettings = currentPage?.settings || { height: 600, gridColumns: 12, gap: 0, padding: 0 };
+  const pageSettings =
+    currentPage?.settings || { height: 600, gridColumns: 12, gap: 0, padding: 0 };
 
-  const categories = ["Politics", "Sports", "Cinema", "Weather", "Astrology", "Kids"];
   const [showEditor, setShowEditor] = useState(false);
-  const [nextId, setNextId] = useState(1);
-  const [showNewsFilter, setShowNewsFilter] = useState(false);
 
   const buildLayoutPayload = (state) => ({
     pages: state.pages,
     presetContainers: state.presetContainers,
     activePage: state.activePage,
-    activeLineId: state.activeLineId
+    activeLineId: state.activeLineId,
   });
 
   const hasLayoutContent = (payload) => {
     if (payload.presetContainers?.length) return true;
-    return payload.pages?.some((page) =>
-      (page.containers && page.containers.length > 0) ||
-      (page.lines && page.lines.length > 0) ||
-      (page.sliders && page.sliders.length > 0)
+    return payload.pages?.some(
+      (page) =>
+        (page.containers && page.containers.length > 0) ||
+        (page.lines && page.lines.length > 0) ||
+        (page.sliders && page.sliders.length > 0)
     );
   };
 
@@ -78,44 +70,36 @@ export default function Editpaper() {
     };
   }, [layoutState, hydrated]);
 
-  const handleCanvasDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const isContainerOverlay = e.dataTransfer.getData("containerOverlay");
-    const lineType = e.dataTransfer.getData("lineType");
-    const lineOrientation = e.dataTransfer.getData("lineOrientation");
-    
+  const handleCanvasDrop = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isContainerOverlay = event.dataTransfer.getData("containerOverlay");
+    const lineType = event.dataTransfer.getData("lineType");
+    const lineOrientation = event.dataTransfer.getData("lineOrientation");
+
     if (lineType && lineOrientation) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
       dispatch(addLine(activePage, lineType, lineOrientation, { x, y }));
       return;
     }
-    
+
     if (isContainerOverlay === "true") {
       dispatch(addContainer(activePage));
-      setNextId(nextId + 1);
-      
-      console.log("Container added to grid flow");
     }
   };
 
-  const handleCanvasDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = "copy";
+  const handleCanvasDragOver = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "copy";
   };
 
   return (
     <div>
-      <PageEditor 
-        open={showEditor} 
-        onClose={() => setShowEditor(false)} 
-        categories={categories}
-      />
+      <PageEditor open={showEditor} onClose={() => setShowEditor(false)} />
 
       {!showEditor && (
         <button className="pageeditorbtn" onClick={() => setShowEditor(true)}>
@@ -123,28 +107,20 @@ export default function Editpaper() {
         </button>
       )}
 
-      <NewsFilter open={showNewsFilter} onClose={() => setShowNewsFilter(false)} />
-
-      {!showNewsFilter && (
-        <button className="pageeditorbtn2" onClick={() => setShowNewsFilter(true)}>
-          <BiCube />
-        </button>
-      )}
-      
-      <div style={{marginLeft: "70px", width:"1400px"}}>
-        <Navbarr/>
+      <div style={{ marginLeft: "70px", width: "1400px" }}>
+        <Navbarr />
       </div>
 
       <div className="ep-main-ed-cont">
-        <div 
-          className="ep-ed-cont" 
-          style={{ 
+        <div
+          className="ep-ed-cont"
+          style={{
             height: `${pageSettings.height}px`,
             padding: `${pageSettings.padding}px`,
-            position: 'relative',
-            overflow: 'visible',
-            width: '1250px',
-            maxWidth: '1250px'
+            position: "relative",
+            overflow: "visible",
+            width: "1250px",
+            maxWidth: "1250px",
           }}
           onDrop={handleCanvasDrop}
           onDragOver={handleCanvasDragOver}
@@ -153,13 +129,13 @@ export default function Editpaper() {
 
           <div
             style={{
-              display: 'grid',
+              display: "grid",
               gridTemplateColumns: `repeat(${pageSettings.gridColumns}, 1fr)`,
               gap: `${pageSettings.gap}px`,
-              width: '100%',
+              width: "100%",
               marginBottom: `${pageSettings.gap}px`,
-              position: 'relative',
-              zIndex: 1
+              position: "relative",
+              zIndex: 1,
             }}
           >
             {containers.map((container) => (
@@ -188,13 +164,15 @@ export default function Editpaper() {
           ))}
 
           {containers.length === 0 && lines.length === 0 && (
-            <div style={{ 
-              padding: "40px", 
-              textAlign: "center",
-              color: "#999",
-              fontSize: "16px"
-            }}>
-              Drop containers here or add sliders/lines from the Page Editor
+            <div
+              style={{
+                padding: "40px",
+                textAlign: "center",
+                color: "#999",
+                fontSize: "16px",
+              }}
+            >
+              Drop containers here or add sliders and lines from the Page Editor
             </div>
           )}
         </div>
@@ -202,4 +180,3 @@ export default function Editpaper() {
     </div>
   );
 }
-

@@ -33,6 +33,7 @@ export const slotReducers = {
         slotId: slotId || nanoid(),
         newsId: null,
         containerType,
+        ...(presetId && { presetId }),
         showSeparator: false,
         shfval: presetShfval || 1,
         // Add dimensions for Universal Container at slot level

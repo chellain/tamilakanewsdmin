@@ -73,6 +73,29 @@ const COMPONENT_MAP = {
   "Video Container": VideoContainer,
 };
 
+const AUTO_POPULATE_CLEARABLE_TYPES = Object.keys(COMPONENT_MAP).filter(
+  (type) => type !== "Poll" && type !== "Video Container"
+);
+
+const AUTO_POPULATE_BASE_CONTAINER_TYPES = AUTO_POPULATE_CLEARABLE_TYPES.filter(
+  (type) => type !== "Universal Container"
+);
+
+const normalizeTag = (value) => String(value || "").trim().toLowerCase();
+
+const getNewsTags = (news) => {
+  const zonal = news?.data?.zonal;
+  if (Array.isArray(zonal)) return zonal.filter(Boolean).map((item) => String(item).trim());
+  if (typeof zonal === "string" && zonal.trim()) return [zonal.trim()];
+  return [];
+};
+
+const getComparableTime = (news) => {
+  const source = news?.updatedAt || news?.createdAt || news?.time || 0;
+  const parsed = new Date(source).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 const getUniversalContainerDefaults = (containerType) => {
   const defaultsMap = {
     "Big Container Type 1": { width: 800, height: 500, layout: 3 },
@@ -123,6 +146,9 @@ export default function EditableContainer({
     }
   });
   const language = useSelector(state => state.newsform?.language || "ta");
+  const allNews = useSelector((state) => state.newsform?.allNews || []);
+  const allPages = useSelector((state) => state.admin?.allPages || []);
+  const presetContainers = useSelector((state) => state.editpaper?.presetContainers || []);
 
   // â”€â”€ Values derived from Redux state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const grid             = containerData?.grid    || { columns: 1, gap: 0 };
@@ -138,11 +164,18 @@ export default function EditableContainer({
 
   // â”€â”€ Local state for settings panel controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [showSettings, setShowSettings]     = useState(false);
+  const [showPopulateModal, setShowPopulateModal] = useState(false);
   const [columns, setColumns]               = useState(grid.columns);
   const [gap, setGap]                       = useState(grid.gap);
   const [padding, setPadding]               = useState(spacing.padding);
   const [margin, setMargin]                 = useState(spacing.margin);
   const [gridColumnSpan, setGridColumnSpan] = useState(1);
+  const [populateContainerOption, setPopulateContainerOption] = useState("");
+  const [populateType, setPopulateType] = useState("infinity");
+  const [populateCount, setPopulateCount] = useState("4");
+  const [selectedPopulateTags, setSelectedPopulateTags] = useState([]);
+  const [populateMode, setPopulateMode] = useState("recent-top");
+  const [selectedManualNewsIds, setSelectedManualNewsIds] = useState([]);
 
   // â”€â”€ Header local state â€” mirrors Redux, re-syncs when Redux changes â”€â”€â”€â”€â”€â”€â”€
   //    This is the KEY FIX: useEffect keeps local state in sync so that
@@ -156,6 +189,140 @@ export default function EditableContainer({
     setHeaderTam(reduxHeaderTam);
     setHeaderEng(reduxHeaderEng);
   }, [reduxHeaderEnabled, reduxHeaderTam, reduxHeaderEng]);
+
+  const categoryOptions = React.useMemo(() => {
+    const seen = new Set();
+    return allPages
+      .filter(
+        (page) =>
+          page?.name?.eng &&
+          page.name.eng !== "Select District" &&
+          !page?.districts
+      )
+      .map((page) => ({
+        value: page.name.eng,
+        label: language === "en" ? page.name.eng : page?.name?.tam || page.name.eng,
+      }))
+      .filter((page) => {
+        const key = normalizeTag(page.value);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [allPages, language]);
+
+  const districtOptions = React.useMemo(() => {
+    const seen = new Set();
+    return (
+      allPages
+        .find((page) => Array.isArray(page?.districts))
+        ?.districts?.map((district) => ({
+          value: district?.eng,
+          label: language === "en" ? district?.eng : district?.tam || district?.eng,
+        }))
+        ?.filter((district) => {
+          const key = normalizeTag(district?.value);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }) || []
+    );
+  }, [allPages, language]);
+
+  const populateContainerOptions = React.useMemo(() => {
+    const presetOptions = presetContainers.map((preset) => ({
+      value: `preset:${preset.id}`,
+      label: preset.presetName,
+      containerType: "Universal Container",
+      presetId: preset.id,
+    }));
+
+    const baseOptions = AUTO_POPULATE_BASE_CONTAINER_TYPES.map((type) => ({
+      value: `builtin:${type}`,
+      label: type,
+      containerType: type,
+      presetId: undefined,
+    }));
+
+    return [...presetOptions, ...baseOptions];
+  }, [presetContainers]);
+
+  const selectedPopulateContainer = React.useMemo(
+    () => populateContainerOptions.find((option) => option.value === populateContainerOption) || null,
+    [populateContainerOption, populateContainerOptions]
+  );
+
+  const populateSelectionLimit =
+    populateType === "custom" ? Math.max(0, parseInt(populateCount, 10) || 0) : null;
+
+  const populateFilteredNews = React.useMemo(() => {
+    const activeTags = selectedPopulateTags.map(normalizeTag);
+    const filtered = [...allNews].filter((news) => {
+      if (activeTags.length === 0) return true;
+      const tags = getNewsTags(news).map(normalizeTag);
+      return activeTags.some((tag) => tags.includes(tag));
+    });
+
+    filtered.sort((a, b) => {
+      const delta = getComparableTime(b) - getComparableTime(a);
+      return populateMode === "recent-bottom" ? -delta : delta;
+    });
+
+    return filtered;
+  }, [allNews, populateMode, selectedPopulateTags]);
+
+  const populatePreparedNews = React.useMemo(() => {
+    if (populateMode === "pick-own") {
+      const selectedSet = new Set(selectedManualNewsIds.map(Number));
+      return populateFilteredNews.filter((news) => selectedSet.has(Number(news.id)));
+    }
+
+    if (populateSelectionLimit === null) return populateFilteredNews;
+    return populateFilteredNews.slice(0, populateSelectionLimit);
+  }, [
+    populateFilteredNews,
+    populateMode,
+    populateSelectionLimit,
+    selectedManualNewsIds,
+  ]);
+
+  useEffect(() => {
+    if (!showPopulateModal) return;
+
+    const existingItem = items.find((item) =>
+      AUTO_POPULATE_CLEARABLE_TYPES.includes(item.containerType)
+    );
+    const matchingOption =
+      populateContainerOptions.find((option) => {
+        if (!existingItem) return false;
+        if (option.presetId) {
+          return (
+            existingItem.containerType === option.containerType &&
+            existingItem.presetId === option.presetId
+          );
+        }
+        return existingItem.containerType === option.containerType;
+      }) || populateContainerOptions[0];
+
+    setPopulateContainerOption(matchingOption?.value || "");
+    setPopulateType("infinity");
+    setPopulateCount("4");
+    setSelectedPopulateTags([]);
+    setPopulateMode("recent-top");
+    setSelectedManualNewsIds([]);
+  }, [showPopulateModal, items, populateContainerOptions]);
+
+  useEffect(() => {
+    const availableIds = new Set(populateFilteredNews.map((news) => Number(news.id)));
+
+    setSelectedManualNewsIds((prev) => {
+      let next = prev.filter((newsId) => availableIds.has(Number(newsId)));
+      if (populateSelectionLimit !== null && next.length > populateSelectionLimit) {
+        next = next.slice(0, populateSelectionLimit);
+      }
+      return next;
+    });
+  }, [populateFilteredNews, populateSelectionLimit]);
 
   // â”€â”€ Dispatch helper for header â€” always sends both fields to Redux â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const dispatchHeader = (enabled, tam, eng) => {
@@ -306,6 +473,123 @@ export default function EditableContainer({
     e.stopPropagation();
   };
 
+  const togglePopulateTag = (value) => {
+    setSelectedPopulateTags((prev) => {
+      const exists = prev.includes(value);
+      return exists ? prev.filter((item) => item !== value) : [...prev, value];
+    });
+  };
+
+  const toggleManualNewsSelection = (newsId) => {
+    setSelectedManualNewsIds((prev) => {
+      const normalizedId = Number(newsId);
+      const exists = prev.includes(normalizedId);
+
+      if (exists) {
+        return prev.filter((item) => item !== normalizedId);
+      }
+
+      if (populateSelectionLimit !== null && prev.length >= populateSelectionLimit) {
+        return prev;
+      }
+
+      return [...prev, normalizedId];
+    });
+  };
+
+  const handlePopulateAutomate = () => {
+    if (!selectedPopulateContainer) return;
+
+    if (selectedPopulateTags.length === 0) {
+      alert("Select at least one category or district to populate this overlay.");
+      return;
+    }
+
+    if (populateType === "custom" && populateSelectionLimit === 0) {
+      alert("Enter a valid custom count before populating the overlay.");
+      return;
+    }
+
+    if (populateMode === "pick-own" && selectedManualNewsIds.length === 0) {
+      alert("Pick at least one news item for manual population.");
+      return;
+    }
+
+    const targetNewsIds = populatePreparedNews
+      .map((news) => Number(news.id))
+      .filter((newsId) => Number.isFinite(newsId));
+
+    if (targetNewsIds.length === 0) {
+      alert("No news matches the selected options.");
+      return;
+    }
+
+    const clearableItems = items.filter((item) =>
+      AUTO_POPULATE_CLEARABLE_TYPES.includes(item.containerType)
+    );
+
+    clearableItems.forEach((item) => {
+      if (isNested && parentContainerId) {
+        dispatch(
+          removeSlotFromNestedContainer({
+            catName,
+            parentContainerId,
+            nestedContainerId: id,
+            slotId: item.slotId,
+          })
+        );
+      } else {
+        dispatch(removeSlotFromContainer({ catName, containerId: id, slotId: item.slotId }));
+      }
+    });
+
+    targetNewsIds.forEach((newsId, index) => {
+      const slotId = `slot_${Date.now() + index}`;
+
+      if (isNested && parentContainerId) {
+        dispatch(
+          addEmptySlotToNested({
+            catName,
+            parentContainerId,
+            nestedContainerId: id,
+            containerType: selectedPopulateContainer.containerType,
+            slotId,
+            presetId: selectedPopulateContainer.presetId,
+          })
+        );
+        dispatch(
+          dropNewsIntoNestedSlot({
+            catName,
+            parentContainerId,
+            nestedContainerId: id,
+            slotId,
+            newsId,
+          })
+        );
+      } else {
+        dispatch(
+          addEmptySlot({
+            catName,
+            containerId: id,
+            containerType: selectedPopulateContainer.containerType,
+            slotId,
+            presetId: selectedPopulateContainer.presetId,
+          })
+        );
+        dispatch(
+          dropNewsIntoSlot({
+            catName,
+            containerId: id,
+            slotId,
+            newsId,
+          })
+        );
+      }
+    });
+
+    setShowPopulateModal(false);
+  };
+
   const borderColor = isNested ? "#f57c00" : "#666";
   const bgColor     = isNested ? "rgba(255, 152, 0, 0.05)" : "transparent";
   const headerAccent = isNested ? "#f57c00" : "#e91e8c";   // magenta for root, orange for nested
@@ -314,8 +598,7 @@ export default function EditableContainer({
       ? (headerEng || headerTam || "header")
       : (headerTam || "header");
 
-
-  const rootZIndex = showSettings ? 500 : 1;
+  const rootZIndex = showSettings || showPopulateModal ? 500 : 1;
 
   return (
     <div 
@@ -391,7 +674,8 @@ export default function EditableContainer({
         <div 
           style={{ 
             position: "absolute",
-            bottom: "-120px", 
+            top: isNested ? "8px" : "auto",
+            bottom: isNested ? "auto" : "-120px", 
             right: "-310px", 
             background: "white", 
             border: `2px solid ${borderColor}`, 
@@ -399,7 +683,7 @@ export default function EditableContainer({
             padding: "15px", 
             zIndex: 200, 
             minWidth: "290px", 
-            maxHeight: "520px", 
+            maxHeight: "min(520px, calc(100vh - 32px))", 
             overflowY: "auto",
             boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
           }}
@@ -452,6 +736,39 @@ export default function EditableContainer({
                 onChange={handleMarginChange}
                 style={{ width: "100%", padding: "6px 8px", border: "1px solid #ccc", borderRadius: "4px", fontSize: "13px" }} />
             </div>
+          </div>
+
+          <div
+            style={{
+              borderTop: "1px solid #eee",
+              marginTop: "14px",
+              paddingTop: "14px",
+              paddingBottom: "14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowPopulateModal(true)}
+              style={{
+                width: "100%",
+                minHeight: "40px",
+                border: "none",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #ff9ec9 0%, #c9184a 100%)",
+                color: "#fff",
+                fontSize: "13px",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
+            >
+              Populate Automate
+            </button>
+            <p style={{ margin: 0, fontSize: "11px", lineHeight: 1.5, color: "#666" }}>
+              Open a larger popup to auto-fill this container overlay with filtered news cards.
+            </p>
           </div>
 
           {/* â”€â”€ Header section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -516,6 +833,549 @@ export default function EditableContainer({
                 />
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {showPopulateModal && (
+        <div
+          onClick={() => setShowPopulateModal(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(35, 17, 34, 0.52)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            zIndex: 2000,
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: "min(920px, 100%)",
+              maxHeight: "86vh",
+              overflowY: "auto",
+              borderRadius: "26px",
+              background: "linear-gradient(180deg, #fff8fc 0%, #fff 100%)",
+              boxShadow: "0 30px 80px rgba(33, 16, 30, 0.35)",
+              border: "1px solid rgba(219, 112, 147, 0.28)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "16px",
+                padding: "20px 24px",
+                background: "linear-gradient(135deg, #2d1b38 0%, #c9184a 100%)",
+                color: "#fff",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "22px", fontWeight: "800" }}>Populate Automate</div>
+                <p style={{ margin: "6px 0 0", fontSize: "13px", opacity: 0.86 }}>
+                  Choose a container style, a population strategy, and the matching news pool for this overlay.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPopulateModal(false)}
+                style={{
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "12px",
+                  border: "none",
+                  background: "rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: "22px 24px 24px",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "20px",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                <section
+                  style={{
+                    border: "1px solid #f1cade",
+                    borderRadius: "20px",
+                    background: "#fff",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#8f4a68" }}>
+                      Container Style
+                    </div>
+                    <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#8a6077" }}>
+                      This selected container type will be repeated for every populated news item.
+                    </p>
+                  </div>
+
+                  <select
+                    value={populateContainerOption}
+                    onChange={(event) => setPopulateContainerOption(event.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: "46px",
+                      borderRadius: "14px",
+                      border: "1px solid #efc6d9",
+                      padding: "0 14px",
+                      fontSize: "14px",
+                      color: "#5a2941",
+                      outline: "none",
+                      background: "#fff8fc",
+                    }}
+                  >
+                    {populateContainerOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </section>
+
+                <section
+                  style={{
+                    border: "1px solid #f1cade",
+                    borderRadius: "20px",
+                    background: "#fff",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#8f4a68" }}>
+                      Population Type
+                    </div>
+                    <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#8a6077" }}>
+                      Infinity uses every matching story. Custom lets you cap the number of inserted containers.
+                    </p>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px" }}>
+                    {[
+                      { value: "infinity", label: "Infinity" },
+                      { value: "custom", label: "Custom" },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        style={{
+                          border: populateType === option.value ? "1px solid #ff9ec9" : "1px solid #f1cade",
+                          background: populateType === option.value ? "#fff1f7" : "#fff",
+                          borderRadius: "16px",
+                          padding: "14px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name={`populate-type-${id}`}
+                          checked={populateType === option.value}
+                          onChange={() => setPopulateType(option.value)}
+                        />
+                        <span style={{ fontSize: "14px", fontWeight: "700", color: "#6f3652" }}>
+                          {option.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {populateType === "custom" && (
+                    <label style={{ display: "flex", flexDirection: "column", gap: "8px", color: "#7f3f5d", fontSize: "13px", fontWeight: "700" }}>
+                      Custom count
+                      <input
+                        type="number"
+                        min="1"
+                        value={populateCount}
+                        onChange={(event) => setPopulateCount(event.target.value)}
+                        style={{
+                          minHeight: "44px",
+                          borderRadius: "14px",
+                          border: "1px solid #efc6d9",
+                          padding: "0 14px",
+                          fontSize: "14px",
+                          outline: "none",
+                        }}
+                      />
+                    </label>
+                  )}
+                </section>
+
+                <section
+                  style={{
+                    border: "1px solid #f1cade",
+                    borderRadius: "20px",
+                    background: "#fff",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#8f4a68" }}>
+                      Category Selection
+                    </div>
+                    <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#8a6077" }}>
+                      Choose one or more pages or districts. Only matching news will be considered for the overlay.
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <div>
+                      <div style={{ marginBottom: "8px", fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#9a5d78" }}>
+                        Categories
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                        {categoryOptions.map((option) => {
+                          const checked = selectedPopulateTags.includes(option.value);
+                          return (
+                            <label
+                              key={option.value}
+                              style={{
+                                border: checked ? "1px solid #ff9ec9" : "1px solid #efc6d9",
+                                background: checked ? "#ffe8f3" : "#fff8fc",
+                                borderRadius: "999px",
+                                padding: "8px 14px",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                fontSize: "13px",
+                                color: "#7f3f5d",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => togglePopulateTag(option.value)}
+                              />
+                              <span>{option.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ marginBottom: "8px", fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#9a5d78" }}>
+                        Districts
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                        {districtOptions.map((option) => {
+                          const checked = selectedPopulateTags.includes(option.value);
+                          return (
+                            <label
+                              key={option.value}
+                              style={{
+                                border: checked ? "1px solid #ff9ec9" : "1px solid #efc6d9",
+                                background: checked ? "#ffe8f3" : "#fff8fc",
+                                borderRadius: "999px",
+                                padding: "8px 14px",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                fontSize: "13px",
+                                color: "#7f3f5d",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => togglePopulateTag(option.value)}
+                              />
+                              <span>{option.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                <section
+                  style={{
+                    border: "1px solid #f1cade",
+                    borderRadius: "20px",
+                    background: "#fff",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#8f4a68" }}>
+                      News Filter
+                    </div>
+                    <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#8a6077" }}>
+                      Decide how the matching news should be ordered or selected before it gets dropped into the overlay.
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[
+                      {
+                        value: "recent-top",
+                        label: "Recently added on top",
+                        description: "Newest stories appear first.",
+                      },
+                      {
+                        value: "recent-bottom",
+                        label: "Recently added at the bottom",
+                        description: "Oldest stories appear first.",
+                      },
+                      {
+                        value: "pick-own",
+                        label: "Pick on your own",
+                        description: "Choose the exact stories manually.",
+                      },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        style={{
+                          border: populateMode === option.value ? "1px solid #ff9ec9" : "1px solid #f1cade",
+                          background: populateMode === option.value ? "#fff1f7" : "#fff",
+                          borderRadius: "16px",
+                          padding: "14px",
+                          cursor: "pointer",
+                          display: "flex",
+                          gap: "10px",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name={`populate-mode-${id}`}
+                          checked={populateMode === option.value}
+                          onChange={() => setPopulateMode(option.value)}
+                        />
+                        <div>
+                          <div style={{ fontSize: "14px", fontWeight: "700", color: "#6f3652" }}>
+                            {option.label}
+                          </div>
+                          <div style={{ marginTop: "4px", fontSize: "12px", color: "#9b6d84" }}>
+                            {option.description}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+
+                <section
+                  style={{
+                    border: "1px solid #f1cade",
+                    borderRadius: "20px",
+                    background: "#fff",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#8f4a68" }}>
+                        Ready To Populate
+                      </div>
+                      <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#8a6077" }}>
+                        {populateMode === "pick-own"
+                          ? "Pick the exact stories to be inserted into the container overlay."
+                          : "Preview the stories that will be inserted based on the chosen rules."}
+                      </p>
+                    </div>
+                    <div
+                      style={{
+                        minWidth: "72px",
+                        padding: "10px 12px",
+                        borderRadius: "14px",
+                        background: "#fff1f7",
+                        color: "#a4005a",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div style={{ fontSize: "20px", fontWeight: "800", lineHeight: 1 }}>
+                        {populateMode === "pick-own" ? selectedManualNewsIds.length : populatePreparedNews.length}
+                      </div>
+                      <div style={{ marginTop: "4px", fontSize: "11px", fontWeight: "700" }}>
+                        selected
+                      </div>
+                    </div>
+                  </div>
+
+                  {populateMode === "pick-own" && (
+                    <div style={{ fontSize: "12px", color: "#9b6d84" }}>
+                      {populateSelectionLimit === null
+                        ? "Choose any number of stories."
+                        : `Choose up to ${populateSelectionLimit} stories.`}
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                      maxHeight: "360px",
+                      overflowY: "auto",
+                      paddingRight: "4px",
+                    }}
+                  >
+                    {populateFilteredNews.length === 0 && (
+                      <div
+                        style={{
+                          border: "1px dashed #efc6d9",
+                          borderRadius: "16px",
+                          padding: "18px",
+                          textAlign: "center",
+                          color: "#9b6d84",
+                          background: "#fff8fc",
+                        }}
+                      >
+                        No stories match the selected categories yet.
+                      </div>
+                    )}
+
+                    {(populateMode === "pick-own" ? populateFilteredNews : populatePreparedNews).map((news) => {
+                      const newsId = Number(news.id);
+                      const isSelected = selectedManualNewsIds.includes(newsId);
+                      const disableSelection =
+                        populateMode === "pick-own" &&
+                        populateSelectionLimit !== null &&
+                        selectedManualNewsIds.length >= populateSelectionLimit &&
+                        !isSelected;
+
+                      return (
+                        <label
+                          key={news._id || news.id}
+                          style={{
+                            border: isSelected ? "1px solid #ff9ec9" : "1px solid #f1cade",
+                            background: isSelected ? "#fff1f7" : "#fff",
+                            borderRadius: "16px",
+                            padding: "14px",
+                            display: "flex",
+                            gap: "12px",
+                            alignItems: "flex-start",
+                            opacity: disableSelection ? 0.55 : 1,
+                            cursor: populateMode === "pick-own" ? "pointer" : "default",
+                          }}
+                        >
+                          {populateMode === "pick-own" && (
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={disableSelection}
+                              onChange={() => toggleManualNewsSelection(newsId)}
+                              style={{ marginTop: "4px" }}
+                            />
+                          )}
+
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: "15px", fontWeight: "700", color: "#5d243f", lineHeight: 1.35 }}>
+                              {news?.data?.headline || news?.dataEn?.headline || "Untitled news"}
+                            </div>
+                            <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "12px", color: "#9b6d84" }}>
+                              <span>{new Date(getComparableTime(news) || Date.now()).toLocaleString()}</span>
+                              {getNewsTags(news).slice(0, 2).map((tag) => (
+                                <span
+                                  key={`${newsId}-${tag}`}
+                                  style={{
+                                    padding: "4px 8px",
+                                    borderRadius: "999px",
+                                    background: "#fff8fc",
+                                    border: "1px solid #f1cade",
+                                  }}
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <div
+                  style={{
+                    border: "1px solid #f1cade",
+                    borderRadius: "20px",
+                    background: "#fff",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ fontSize: "13px", color: "#8a6077", lineHeight: 1.6 }}>
+                    This action replaces the current news-style slots inside this container overlay and keeps the other overlay elements intact.
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowPopulateModal(false)}
+                      style={{
+                        minHeight: "44px",
+                        padding: "0 18px",
+                        borderRadius: "14px",
+                        border: "1px solid #efc6d9",
+                        background: "#fff",
+                        color: "#7f3f5d",
+                        fontWeight: "700",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePopulateAutomate}
+                      style={{
+                        minHeight: "44px",
+                        padding: "0 20px",
+                        borderRadius: "14px",
+                        border: "none",
+                        background: "linear-gradient(135deg, #db7093 0%, #c9184a 100%)",
+                        color: "#fff",
+                        fontWeight: "700",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Populate Overlay
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
