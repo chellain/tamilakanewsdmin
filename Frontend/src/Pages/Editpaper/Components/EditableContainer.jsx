@@ -6,6 +6,7 @@ import {
   updateContainerGrid,
   updateContainerSpacing,
   updateContainerHeader,
+  updateContainerAutoPopulate,
   addEmptySlot,
   dropNewsIntoSlot,
   deleteContainer,
@@ -14,6 +15,7 @@ import {
   updateNestedContainerGrid,
   updateNestedContainerSpacing,
   updateNestedContainerHeader,
+  updateNestedContainerAutoPopulate,
   addEmptySlotToNested,
   dropNewsIntoNestedSlot,
   removeNewsFromNestedSlot,
@@ -80,6 +82,10 @@ const AUTO_POPULATE_CLEARABLE_TYPES = Object.keys(COMPONENT_MAP).filter(
 const AUTO_POPULATE_BASE_CONTAINER_TYPES = AUTO_POPULATE_CLEARABLE_TYPES.filter(
   (type) => type !== "Universal Container"
 );
+const AUTO_POPULATE_MATCH_OPERATORS = {
+  AND: "and",
+  OR: "or",
+};
 
 const normalizeTag = (value) => String(value || "").trim().toLowerCase();
 
@@ -157,6 +163,7 @@ export default function EditableContainer({
   const reduxHeaderEnabled = containerData?.header?.enabled ?? false;
   const reduxHeaderTam     = containerData?.header?.tam ?? containerData?.header?.title ?? "";
   const reduxHeaderEng     = containerData?.header?.eng ?? "";
+  const persistedAutoPopulate = containerData?.autoPopulate ?? null;
   const nestedContainers = containerData?.nestedContainers || [];
   const items            = containerData?.items   || [];
   const sliders          = containerData?.sliders || [];
@@ -176,6 +183,8 @@ export default function EditableContainer({
   const [selectedPopulateTags, setSelectedPopulateTags] = useState([]);
   const [populateMode, setPopulateMode] = useState("recent-top");
   const [selectedManualNewsIds, setSelectedManualNewsIds] = useState([]);
+  const [populateMatchOperator, setPopulateMatchOperator] = useState(AUTO_POPULATE_MATCH_OPERATORS.OR);
+  const [populateAutomateEnabled, setPopulateAutomateEnabled] = useState(false);
 
   // â”€â”€ Header local state â€” mirrors Redux, re-syncs when Redux changes â”€â”€â”€â”€â”€â”€â”€
   //    This is the KEY FIX: useEffect keeps local state in sync so that
@@ -255,35 +264,176 @@ export default function EditableContainer({
   const populateSelectionLimit =
     populateType === "custom" ? Math.max(0, parseInt(populateCount, 10) || 0) : null;
 
-  const populateFilteredNews = React.useMemo(() => {
-    const activeTags = selectedPopulateTags.map(normalizeTag);
+  const buildPreparedPopulateNews = React.useCallback((config) => {
+    const activeTags = (config?.tags || []).map(normalizeTag).filter(Boolean);
+    const matchOperator =
+      config?.matchOperator === AUTO_POPULATE_MATCH_OPERATORS.AND
+        ? AUTO_POPULATE_MATCH_OPERATORS.AND
+        : AUTO_POPULATE_MATCH_OPERATORS.OR;
+
     const filtered = [...allNews].filter((news) => {
       if (activeTags.length === 0) return true;
       const tags = getNewsTags(news).map(normalizeTag);
+      if (matchOperator === AUTO_POPULATE_MATCH_OPERATORS.AND && activeTags.length > 1) {
+        return activeTags.every((tag) => tags.includes(tag));
+      }
       return activeTags.some((tag) => tags.includes(tag));
     });
 
     filtered.sort((a, b) => {
       const delta = getComparableTime(b) - getComparableTime(a);
-      return populateMode === "recent-bottom" ? -delta : delta;
+      return config?.mode === "recent-bottom" ? -delta : delta;
     });
 
-    return filtered;
-  }, [allNews, populateMode, selectedPopulateTags]);
-
-  const populatePreparedNews = React.useMemo(() => {
-    if (populateMode === "pick-own") {
-      const selectedSet = new Set(selectedManualNewsIds.map(Number));
-      return populateFilteredNews.filter((news) => selectedSet.has(Number(news.id)));
+    if (config?.mode === "pick-own") {
+      const selectedSet = new Set((config?.manualNewsIds || []).map(Number));
+      return filtered.filter((news) => selectedSet.has(Number(news.id)));
     }
 
-    if (populateSelectionLimit === null) return populateFilteredNews;
-    return populateFilteredNews.slice(0, populateSelectionLimit);
+    const selectionLimit =
+      config?.type === "custom"
+        ? Math.max(0, parseInt(config?.count, 10) || 0)
+        : null;
+
+    if (selectionLimit === null) return filtered;
+    return filtered.slice(0, selectionLimit);
+  }, [allNews]);
+
+  const populateFilteredNews = React.useMemo(() => {
+    return buildPreparedPopulateNews({
+      tags: selectedPopulateTags,
+      matchOperator: populateMatchOperator,
+      mode: populateMode === "recent-bottom" ? "recent-bottom" : "recent-top",
+      type: "infinity",
+    });
+  }, [buildPreparedPopulateNews, populateMatchOperator, populateMode, selectedPopulateTags]);
+
+  const populatePreparedNews = React.useMemo(() => {
+    return buildPreparedPopulateNews({
+      tags: selectedPopulateTags,
+      matchOperator: populateMatchOperator,
+      mode: populateMode,
+      type: populateType,
+      count: populateCount,
+      manualNewsIds: selectedManualNewsIds,
+    });
   }, [
-    populateFilteredNews,
+    buildPreparedPopulateNews,
+    populateCount,
+    populateMatchOperator,
     populateMode,
-    populateSelectionLimit,
+    populateType,
     selectedManualNewsIds,
+    selectedPopulateTags,
+  ]);
+
+  const clearableItems = React.useMemo(
+    () => items.filter((item) => AUTO_POPULATE_CLEARABLE_TYPES.includes(item.containerType)),
+    [items]
+  );
+
+  const dispatchAutoPopulateConfig = React.useCallback((autoPopulate) => {
+    if (isNested && parentContainerId) {
+      dispatch(
+        updateNestedContainerAutoPopulate({
+          catName,
+          parentContainerId,
+          nestedContainerId: id,
+          autoPopulate,
+        })
+      );
+    } else {
+      dispatch(
+        updateContainerAutoPopulate({
+          catName,
+          containerId: id,
+          autoPopulate,
+        })
+      );
+    }
+  }, [catName, dispatch, id, isNested, parentContainerId]);
+
+  const applyPopulateSelection = React.useCallback((config) => {
+    const targetNewsIds = (config?.targetNewsIds || [])
+      .map((newsId) => Number(newsId))
+      .filter((newsId) => Number.isFinite(newsId));
+
+    if (!config?.containerType || targetNewsIds.length === 0) {
+      return false;
+    }
+
+    clearableItems.forEach((item) => {
+      if (isNested && parentContainerId) {
+        dispatch(
+          removeSlotFromNestedContainer({
+            catName,
+            parentContainerId,
+            nestedContainerId: id,
+            slotId: item.slotId,
+          })
+        );
+      } else {
+        dispatch(removeSlotFromContainer({ catName, containerId: id, slotId: item.slotId }));
+      }
+    });
+
+    targetNewsIds.forEach((newsId, index) => {
+      const slotId = `slot_${Date.now() + index}`;
+
+      if (isNested && parentContainerId) {
+        dispatch(
+          addEmptySlotToNested({
+            catName,
+            parentContainerId,
+            nestedContainerId: id,
+            containerType: config.containerType,
+            slotId,
+            presetId: config.presetId,
+          })
+        );
+        dispatch(
+          dropNewsIntoNestedSlot({
+            catName,
+            parentContainerId,
+            nestedContainerId: id,
+            slotId,
+            newsId,
+          })
+        );
+      } else {
+        dispatch(
+          addEmptySlot({
+            catName,
+            containerId: id,
+            containerType: config.containerType,
+            slotId,
+            presetId: config.presetId,
+          })
+        );
+        dispatch(
+          dropNewsIntoSlot({
+            catName,
+            containerId: id,
+            slotId,
+            newsId,
+          })
+        );
+      }
+    });
+
+    if (config.persistConfig !== undefined) {
+      dispatchAutoPopulateConfig(config.persistConfig);
+    }
+
+    return true;
+  }, [
+    catName,
+    clearableItems,
+    dispatch,
+    dispatchAutoPopulateConfig,
+    id,
+    isNested,
+    parentContainerId,
   ]);
 
   useEffect(() => {
@@ -304,13 +454,38 @@ export default function EditableContainer({
         return existingItem.containerType === option.containerType;
       }) || populateContainerOptions[0];
 
-    setPopulateContainerOption(matchingOption?.value || "");
-    setPopulateType("infinity");
-    setPopulateCount("4");
-    setSelectedPopulateTags([]);
-    setPopulateMode("recent-top");
-    setSelectedManualNewsIds([]);
-  }, [showPopulateModal, items, populateContainerOptions]);
+    const savedConfig = persistedAutoPopulate;
+    const savedOption = savedConfig
+      ? populateContainerOptions.find((option) => {
+          if (savedConfig.presetId) {
+            return (
+              option.containerType === savedConfig.containerType &&
+              option.presetId === savedConfig.presetId
+            );
+          }
+          return option.containerType === savedConfig.containerType;
+        })
+      : null;
+
+    setPopulateContainerOption(savedOption?.value || matchingOption?.value || "");
+    setPopulateType(savedConfig?.type || "infinity");
+    setPopulateCount(
+      savedConfig?.count != null ? String(savedConfig.count) : "4"
+    );
+    setSelectedPopulateTags(Array.isArray(savedConfig?.tags) ? savedConfig.tags : []);
+    setPopulateMode(savedConfig?.mode || "recent-top");
+    setSelectedManualNewsIds(
+      Array.isArray(savedConfig?.manualNewsIds)
+        ? savedConfig.manualNewsIds.map((newsId) => Number(newsId)).filter(Number.isFinite)
+        : []
+    );
+    setPopulateMatchOperator(
+      savedConfig?.matchOperator === AUTO_POPULATE_MATCH_OPERATORS.AND
+        ? AUTO_POPULATE_MATCH_OPERATORS.AND
+        : AUTO_POPULATE_MATCH_OPERATORS.OR
+    );
+    setPopulateAutomateEnabled(Boolean(savedConfig?.automate));
+  }, [showPopulateModal, items, persistedAutoPopulate, populateContainerOptions]);
 
   useEffect(() => {
     const availableIds = new Set(populateFilteredNews.map((news) => Number(news.id)));
@@ -323,6 +498,64 @@ export default function EditableContainer({
       return next;
     });
   }, [populateFilteredNews, populateSelectionLimit]);
+
+  const automatedPreparedNews = React.useMemo(() => {
+    if (!persistedAutoPopulate?.containerType) return [];
+    return buildPreparedPopulateNews({
+      tags: persistedAutoPopulate?.tags || [],
+      matchOperator: persistedAutoPopulate?.matchOperator,
+      mode: persistedAutoPopulate?.mode,
+      type: persistedAutoPopulate?.type,
+      count: persistedAutoPopulate?.count,
+      manualNewsIds: persistedAutoPopulate?.manualNewsIds || [],
+    });
+  }, [buildPreparedPopulateNews, persistedAutoPopulate]);
+
+  const automatedTargetNewsIds = React.useMemo(
+    () =>
+      automatedPreparedNews
+        .map((news) => Number(news.id))
+        .filter((newsId) => Number.isFinite(newsId)),
+    [automatedPreparedNews]
+  );
+
+  const currentAutoPopulateSignature = React.useMemo(
+    () =>
+      clearableItems
+        .map((item) => `${item.containerType}:${item.presetId || ""}:${Number(item.newsId) || ""}`)
+        .join("|"),
+    [clearableItems]
+  );
+
+  const desiredAutoPopulateSignature = React.useMemo(() => {
+    if (!persistedAutoPopulate?.containerType || automatedTargetNewsIds.length === 0) return "";
+    return automatedTargetNewsIds
+      .map((newsId) =>
+        `${persistedAutoPopulate.containerType}:${persistedAutoPopulate.presetId || ""}:${newsId}`
+      )
+      .join("|");
+  }, [automatedTargetNewsIds, persistedAutoPopulate]);
+
+  useEffect(() => {
+    if (!persistedAutoPopulate?.automate) return;
+    if (!persistedAutoPopulate?.containerType) return;
+    if (!Array.isArray(persistedAutoPopulate?.tags) || persistedAutoPopulate.tags.length === 0) return;
+    if (automatedTargetNewsIds.length === 0) return;
+    if (currentAutoPopulateSignature === desiredAutoPopulateSignature) return;
+
+    applyPopulateSelection({
+      containerType: persistedAutoPopulate.containerType,
+      presetId: persistedAutoPopulate.presetId,
+      targetNewsIds: automatedTargetNewsIds,
+      persistConfig: persistedAutoPopulate,
+    });
+  }, [
+    applyPopulateSelection,
+    automatedTargetNewsIds,
+    currentAutoPopulateSignature,
+    desiredAutoPopulateSignature,
+    persistedAutoPopulate,
+  ]);
 
   // â”€â”€ Dispatch helper for header â€” always sends both fields to Redux â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const dispatchHeader = (enabled, tam, eng) => {
@@ -524,67 +757,26 @@ export default function EditableContainer({
       return;
     }
 
-    const clearableItems = items.filter((item) =>
-      AUTO_POPULATE_CLEARABLE_TYPES.includes(item.containerType)
-    );
+    const nextAutoPopulateConfig = {
+      automate: populateAutomateEnabled,
+      containerType: selectedPopulateContainer.containerType,
+      presetId: selectedPopulateContainer.presetId,
+      type: populateType,
+      count: populateType === "custom" ? Math.max(1, parseInt(populateCount, 10) || 1) : null,
+      tags: [...selectedPopulateTags],
+      mode: populateMode,
+      manualNewsIds: selectedManualNewsIds.map((newsId) => Number(newsId)).filter(Number.isFinite),
+      matchOperator:
+        populateMatchOperator === AUTO_POPULATE_MATCH_OPERATORS.AND
+          ? AUTO_POPULATE_MATCH_OPERATORS.AND
+          : AUTO_POPULATE_MATCH_OPERATORS.OR,
+    };
 
-    clearableItems.forEach((item) => {
-      if (isNested && parentContainerId) {
-        dispatch(
-          removeSlotFromNestedContainer({
-            catName,
-            parentContainerId,
-            nestedContainerId: id,
-            slotId: item.slotId,
-          })
-        );
-      } else {
-        dispatch(removeSlotFromContainer({ catName, containerId: id, slotId: item.slotId }));
-      }
-    });
-
-    targetNewsIds.forEach((newsId, index) => {
-      const slotId = `slot_${Date.now() + index}`;
-
-      if (isNested && parentContainerId) {
-        dispatch(
-          addEmptySlotToNested({
-            catName,
-            parentContainerId,
-            nestedContainerId: id,
-            containerType: selectedPopulateContainer.containerType,
-            slotId,
-            presetId: selectedPopulateContainer.presetId,
-          })
-        );
-        dispatch(
-          dropNewsIntoNestedSlot({
-            catName,
-            parentContainerId,
-            nestedContainerId: id,
-            slotId,
-            newsId,
-          })
-        );
-      } else {
-        dispatch(
-          addEmptySlot({
-            catName,
-            containerId: id,
-            containerType: selectedPopulateContainer.containerType,
-            slotId,
-            presetId: selectedPopulateContainer.presetId,
-          })
-        );
-        dispatch(
-          dropNewsIntoSlot({
-            catName,
-            containerId: id,
-            slotId,
-            newsId,
-          })
-        );
-      }
+    applyPopulateSelection({
+      containerType: selectedPopulateContainer.containerType,
+      presetId: selectedPopulateContainer.presetId,
+      targetNewsIds,
+      persistConfig: nextAutoPopulateConfig,
     });
 
     setShowPopulateModal(false);
@@ -676,7 +868,7 @@ export default function EditableContainer({
             position: "absolute",
             top: isNested ? "8px" : "auto",
             bottom: isNested ? "auto" : "-120px", 
-            right: "-310px", 
+            right: "-420px", 
             background: "white", 
             border: `2px solid ${borderColor}`, 
             borderRadius: "8px", 
@@ -1229,6 +1421,94 @@ export default function EditableContainer({
                       </div>
                     </div>
                   </div>
+
+                  {selectedPopulateTags.length >= 2 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "12px",
+                        flexWrap: "wrap",
+                        padding: "12px 14px",
+                        borderRadius: "14px",
+                        background: "#fff8fc",
+                        border: "1px solid #f1cade",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: "12px", fontWeight: "800", color: "#8f4a68" }}>
+                          Multi-category logic
+                        </div>
+                        <div style={{ marginTop: "4px", fontSize: "12px", color: "#9b6d84" }}>
+                          Use `&` to require every selected tag, or `||` to allow any selected tag.
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        {[
+                          {
+                            value: AUTO_POPULATE_MATCH_OPERATORS.AND,
+                            label: "&",
+                            title: "AND / Intersection",
+                          },
+                          {
+                            value: AUTO_POPULATE_MATCH_OPERATORS.OR,
+                            label: "||",
+                            title: "OR / Union",
+                          },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setPopulateMatchOperator(option.value)}
+                            title={option.title}
+                            style={{
+                              minWidth: "52px",
+                              minHeight: "40px",
+                              borderRadius: "12px",
+                              border:
+                                populateMatchOperator === option.value
+                                  ? "1px solid #ff9ec9"
+                                  : "1px solid #efc6d9",
+                              background:
+                                populateMatchOperator === option.value ? "#fff1f7" : "#fff",
+                              color: "#7f3f5d",
+                              fontWeight: "800",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "12px 14px",
+                      borderRadius: "14px",
+                      background: "#fff8fc",
+                      border: "1px solid #f1cade",
+                      color: "#7f3f5d",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={populateAutomateEnabled}
+                      onChange={(event) => setPopulateAutomateEnabled(event.target.checked)}
+                    />
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: "800" }}>Automate</div>
+                      <div style={{ marginTop: "4px", fontSize: "12px", color: "#9b6d84" }}>
+                        Keep this populated container refreshed when new matching news is uploaded.
+                      </div>
+                    </div>
+                  </label>
 
                   {populateMode === "pick-own" && (
                     <div style={{ fontSize: "12px", color: "#9b6d84" }}>

@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
 import {
-  FiCalendar,
   FiEdit3,
   FiFileText,
   FiHome,
@@ -238,41 +237,6 @@ export default function AdminHome() {
             )}
           </div>
 
-          <div className="recent-activity">
-            <h2>Recent Activity</h2>
-
-            <div className="activity-list">
-              <div className="activity-item">
-                <div className="activity-icon">
-                  <FiEdit3 />
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">New article published</div>
-                  <div className="activity-time">2 hours ago</div>
-                </div>
-              </div>
-
-              <div className="activity-item">
-                <div className="activity-icon">
-                  <FiUser />
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">New user registered</div>
-                  <div className="activity-time">5 hours ago</div>
-                </div>
-              </div>
-
-              <div className="activity-item">
-                <div className="activity-icon">
-                  <FiCalendar />
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">Publication scheduled</div>
-                  <div className="activity-time">1 day ago</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

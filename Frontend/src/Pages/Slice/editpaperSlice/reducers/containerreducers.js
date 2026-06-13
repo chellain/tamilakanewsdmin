@@ -29,6 +29,7 @@ export const containerReducers = {
               padding: 0,
               margin: 0
             },
+            autoPopulate: null,
             nestedContainers: [],
             sliders: [],
             lines: []
@@ -91,5 +92,17 @@ export const containerReducers = {
       if (margin !== undefined) cont.spacing.margin = margin;
     }
     logState(state, "updateContainerSpacing");
+  },
+
+  updateContainerAutoPopulate(state, action) {
+    const { catName, containerId, autoPopulate } = action.payload;
+    const cont = state.pages
+      .find(p => p.catName === catName)
+      ?.containers.find(c => c.id === containerId);
+
+    if (cont) {
+      cont.autoPopulate = autoPopulate ? { ...autoPopulate } : null;
+    }
+    logState(state, "updateContainerAutoPopulate");
   }
 };

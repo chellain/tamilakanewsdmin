@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import timeFun from "../Containers_/timeFun";
 import { useSelector } from "react-redux";
 import jwt from "../../../assets/jwt.png";
+import { useMobile } from "../Components2/PagePreview";
 
 const PreviewUniversalNewsContainer = ({
   catName,
@@ -17,6 +18,7 @@ const PreviewUniversalNewsContainer = ({
   const { allNews = [], translatedNews = [], language } = useSelector(
     (state) => state.newsform || {}
   );
+  const isMobile = useMobile();
 
   // Read slot from Redux directly — all values come from here
   const slot = useSelector((state) => {
@@ -55,6 +57,9 @@ const PreviewUniversalNewsContainer = ({
   const padding         = slot?.dimensions?.padding         ?? 10;
   const version         = slot?.shfval                      ?? 1;
   const showSeparator   = slot?.showSeparator               ?? false;
+  const isSideBySideLayout = [4, 5, 6, 7, 8, 9].includes(version);
+  const mobileImageMaxWidth = Math.max(96, Math.min(imgWidth, 180));
+  const mobilePadding = Math.min(padding, 8);
 
   const newsId = slot?.newsId;
   const newsSource = language === "en" ? translatedNews : allNews;
@@ -92,26 +97,40 @@ const PreviewUniversalNewsContainer = ({
   };
 
   const imageStyle = {
-    width:        `${imgWidth}px`,
-    height:       `${imgHeight}px`,
+    width:        isMobile
+      ? (isSideBySideLayout ? `clamp(96px, 38vw, ${mobileImageMaxWidth}px)` : "100%")
+      : `${imgWidth}px`,
+    height:       isMobile ? "auto" : `${imgHeight}px`,
     borderRadius: "5px",
     overflow:     "hidden",
     flexShrink:   0,
+    maxWidth:     "100%",
+    aspectRatio:  imgWidth && imgHeight ? `${imgWidth}/${imgHeight}` : undefined,
+    alignSelf:    isMobile && isSideBySideLayout ? "flex-start" : undefined,
   };
 
   const headlineStyle = {
-    fontSize:     "20px",
+    fontSize:     isMobile ? "15px" : "20px",
     fontWeight:   "bold",
+    lineHeight:   1.35,
   };
 
   const contentStyle = {
-    fontSize:     "14px",
-
+    fontSize:     isMobile ? "12px" : "14px",
+    lineHeight:   1.45,
   };
 
   const timeStyle = {
-    fontSize: "12px",
+    fontSize: isMobile ? "10px" : "12px",
     color:    "gray",
+  };
+
+  const rowLayout = {
+    display: "flex",
+    gap: isMobile ? "10px" : "15px",
+    alignItems: "flex-start",
+    flexDirection: "row",
+    width: "100%",
   };
 
   const renderMedia = () => {
@@ -166,7 +185,7 @@ const PreviewUniversalNewsContainer = ({
         );
       case 4:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={imageStyle}>{renderMedia()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
@@ -177,7 +196,7 @@ const PreviewUniversalNewsContainer = ({
         );
       case 5:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
               <div style={contentStyle}>{renderData.content}</div>
@@ -188,7 +207,7 @@ const PreviewUniversalNewsContainer = ({
         );
       case 6:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={imageStyle}>{renderMedia()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
@@ -198,7 +217,7 @@ const PreviewUniversalNewsContainer = ({
         );
       case 7:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
               <div style={timeStyle}>{renderData.time}</div>
@@ -208,7 +227,7 @@ const PreviewUniversalNewsContainer = ({
         );
       case 8:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={imageStyle}>{renderMedia()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={contentStyle}>{renderData.content}</div>
@@ -218,7 +237,7 @@ const PreviewUniversalNewsContainer = ({
         );
       case 9:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={contentStyle}>{renderData.content}</div>
               <div style={timeStyle}>{renderData.time}</div>
@@ -258,11 +277,13 @@ const PreviewUniversalNewsContainer = ({
         className="preview-universal-container"
         onClick={handleNavigate}
         style={{
-          width:      containerWidth  > 0 ? `${containerWidth}px`  : undefined,
-          minHeight:  containerHeight > 0 ? `${containerHeight}px` : undefined,
-          padding:    `${padding}px`,
+          width:      isMobile ? "100%" : (containerWidth  > 0 ? `${containerWidth}px`  : undefined),
+          minHeight:  isMobile ? undefined : (containerHeight > 0 ? `${containerHeight}px` : undefined),
+          padding:    `${isMobile ? mobilePadding : padding}px`,
           cursor:     "pointer",
           transition: "0.3s ease-in-out",
+          maxWidth:   "100%",
+          boxSizing:  "border-box",
         }}
       >
         

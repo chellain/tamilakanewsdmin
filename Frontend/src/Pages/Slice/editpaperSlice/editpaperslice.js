@@ -262,6 +262,7 @@ export const {
   updateContainerSpacing,
   deleteContainer,
   updateContainerHeader,
+  updateContainerAutoPopulate,
 
   // Slot actions
   addEmptySlot,
@@ -297,6 +298,7 @@ export const {
   updateNestedContainerDimensions,
   updateNestedContainerHeader,
   updateNestedContainerSpacing,
+  updateNestedContainerAutoPopulate,
   addEmptySlotToNested,
   dropNewsIntoNestedSlot,
   removeNewsFromNestedSlot,

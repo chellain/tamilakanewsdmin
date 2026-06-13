@@ -77,6 +77,9 @@ const UniversalNewsContainer = ({
     `${defaultWidth}-${defaultHeight}-${defaultLayout}-10-${defaultWidth}-${defaultHeight}`
   );
   const [copySuccess, setCopySuccess] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false
+  );
 
   const allNews = useSelector((state) => state.newsform?.allNews || []);
 
@@ -166,6 +169,23 @@ const UniversalNewsContainer = ({
       setConfigInput(newConfig);
     }
   }, [slot?.dimensions]); // Only re-run when dimensions object changes
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handleChange = (event) => setIsMobile(event.matches);
+
+    setIsMobile(mq.matches);
+
+    if (mq.addEventListener) {
+      mq.addEventListener("change", handleChange);
+      return () => mq.removeEventListener("change", handleChange);
+    }
+
+    mq.addListener(handleChange);
+    return () => mq.removeListener(handleChange);
+  }, []);
 
   const DEFAULT_DATA = {
     media: jwt,
@@ -447,28 +467,43 @@ const UniversalNewsContainer = ({
 
   // Layout renderer based on version
   const renderLayout = () => {
+    const isSideBySideLayout = [4, 5, 6, 7, 8, 9].includes(version);
+    const mobileImageMaxWidth = Math.max(96, Math.min(imgWidth, 180));
     const imageStyle = {
-      width: `${imgWidth}px`,
-      height: `${imgHeight}px`,
+      width: isMobile
+        ? (isSideBySideLayout ? `clamp(96px, 38vw, ${mobileImageMaxWidth}px)` : "100%")
+        : `${imgWidth}px`,
+      height: isMobile ? "auto" : `${imgHeight}px`,
       borderRadius: "5px",
       overflow: "hidden",
       flexShrink: 0,
+      maxWidth: "100%",
+      aspectRatio: imgWidth && imgHeight ? `${imgWidth}/${imgHeight}` : undefined,
+      alignSelf: isMobile && isSideBySideLayout ? "flex-start" : undefined,
     };
 
     const headlineStyle = {
-      fontSize: "20px",
+      fontSize: isMobile ? "15px" : "20px",
       fontWeight: "bold",
-  
+      lineHeight: 1.35,
     };
 
     const contentStyle = {
-      fontSize: "14px",
-     
+      fontSize: isMobile ? "12px" : "14px",
+      lineHeight: 1.45,
     };
 
     const timeStyle = {
-      fontSize: "12px",
+      fontSize: isMobile ? "10px" : "12px",
       color: "gray",
+    };
+
+    const rowLayout = {
+      display: "flex",
+      gap: isMobile ? "10px" : "15px",
+      alignItems: "flex-start",
+      flexDirection: "row",
+      width: "100%",
     };
 
     switch (version) {
@@ -508,7 +543,7 @@ const UniversalNewsContainer = ({
       // Layout 4: Image (left) | Headline + OneLiner (right)
       case 4:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={imageStyle}>{renderMedia()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
@@ -521,7 +556,7 @@ const UniversalNewsContainer = ({
       // Layout 5: Headline + OneLiner (left) | Image (right)
       case 5:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
               <div style={contentStyle}>{renderData.content}</div>
@@ -534,7 +569,7 @@ const UniversalNewsContainer = ({
       // Layout 6: Image (left) | Headline (right)
       case 6:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={imageStyle}>{renderMedia()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
@@ -546,7 +581,7 @@ const UniversalNewsContainer = ({
       // Layout 7: Headline (left) | Image (right)
       case 7:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={headlineStyle}>{renderData.headline}</div>
               <div style={timeStyle}>{renderData.time}</div>
@@ -558,7 +593,7 @@ const UniversalNewsContainer = ({
       // Layout 8: Image (left) | OneLiner (right)
       case 8:
         return (
-          <div style={{ display: "flex", gap: "15px", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={imageStyle}>{renderMedia()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={contentStyle}>{renderData.content}</div>
@@ -570,7 +605,7 @@ const UniversalNewsContainer = ({
       // Layout 9: OneLiner (left) | Image (right)
       case 9:
         return (
-          <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <div style={rowLayout}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={contentStyle}>{renderData.content}</div>
               <div style={timeStyle}>{renderData.time}</div>
@@ -612,7 +647,7 @@ const UniversalNewsContainer = ({
   };
 
   return (
-    <div style={{ position: "relative", width: "fit-content" }}>
+    <div style={{ position: "relative", width: isMobile ? "100%" : "fit-content", maxWidth: "100%" }}>
       <style>
         {`
           .universal-container {
@@ -718,11 +753,13 @@ const UniversalNewsContainer = ({
         style={{
           border: border ? "2px dotted #999" : "none",
           position: "relative",
-          width: containerWidth > 0 ? `${containerWidth}px` : undefined,
-          minHeight: containerHeight > 0 ? `${containerHeight}px` : undefined,
-          padding: `${padding}px`,
+          width: isMobile ? "100%" : (containerWidth > 0 ? `${containerWidth}px` : undefined),
+          minHeight: isMobile ? undefined : (containerHeight > 0 ? `${containerHeight}px` : undefined),
+          padding: `${isMobile ? Math.min(padding, 8) : padding}px`,
           zIndex: showEditPopup ? 200 : 1,
           isolation: "isolate",
+          maxWidth: "100%",
+          boxSizing: "border-box",
         }}
       >
         {border && (

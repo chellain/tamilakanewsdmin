@@ -38,6 +38,7 @@ export const nestedReducers = {
               padding: 0,
               margin: 0
             },
+            autoPopulate: null,
             nestedContainers: [],
             sliders: [],
             lines: []
@@ -108,6 +109,19 @@ export const nestedReducers = {
       if (margin !== undefined) nestedCont.spacing.margin = margin;
     }
     logState(state, "updateNestedContainerSpacing");
+  },
+
+  updateNestedContainerAutoPopulate(state, action) {
+    const { catName, parentContainerId, nestedContainerId, autoPopulate } = action.payload;
+    const nestedCont = state.pages
+      .find(p => p.catName === catName)
+      ?.containers.find(c => c.id === parentContainerId)
+      ?.nestedContainers?.find(nc => nc.id === nestedContainerId);
+
+    if (nestedCont) {
+      nestedCont.autoPopulate = autoPopulate ? { ...autoPopulate } : null;
+    }
+    logState(state, "updateNestedContainerAutoPopulate");
   },
 
   addEmptySlotToNested(state, action) {
