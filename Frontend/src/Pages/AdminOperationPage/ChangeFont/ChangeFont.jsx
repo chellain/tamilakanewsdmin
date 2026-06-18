@@ -4,13 +4,16 @@ import { setSelectedFont } from "../../Slice/adminSlice.js";
 import {
   ensureTamilFontFaces,
   getTamilFontFamily,
+  getTamilLegacyPreviewFamily,
   normalizeTamilFontId,
   TAMIL_FONT_OPTIONS,
 } from "../../../utils/tamilFonts.js";
 import "./changefont.scss";
 
 const tamilPreview =
-  "தமிழக நியூஸ் - உண்மை, தெளிவு, நடுநிலை. உங்கள் நாளைய செய்தி இன்று இங்கே.";
+  "\u0ba4\u0bae\u0bbf\u0bb4\u0b95 \u0ba8\u0bbf\u0baf\u0bc2\u0bb8\u0bcd - \u0b89\u0ba3\u0bcd\u0bae\u0bc8, \u0ba4\u0bc6\u0bb3\u0bbf\u0bb5\u0bc1, \u0ba8\u0b9f\u0bc1\u0ba8\u0bbf\u0bb2\u0bc8. \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0ba8\u0bbe\u0bb3\u0bc8\u0baf \u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bbf \u0b87\u0ba9\u0bcd\u0bb1\u0bc1 \u0b87\u0b99\u0bcd\u0b95\u0bc7.";
+const legacyGlyphPreview =
+  "mfuKjy; nra;jp khjpup Kd;NdhL;L - fUj;Jf;fs; nrhy;Yk; nray;fs;";
 const englishPreview =
   "English preview stays in the normal website font while Tamil changes.";
 
@@ -54,6 +57,11 @@ export default function ChangeFont() {
                 className={`font-option ${
                   selectedFont === font.id ? "selected" : ""
                 }`}
+                style={{
+                  "--font-option-preview-family": getTamilLegacyPreviewFamily(
+                    font.id
+                  ),
+                }}
               >
                 <input
                   type="radio"
@@ -67,6 +75,11 @@ export default function ChangeFont() {
                   <span className="font-option-description">
                     {font.description}
                   </span>
+                  {font.id !== "default" && (
+                    <span className="font-option-glyph-preview">
+                      {legacyGlyphPreview}
+                    </span>
+                  )}
                 </span>
               </label>
             ))}
@@ -89,6 +102,15 @@ export default function ChangeFont() {
             <p>{tamilPreview}</p>
             <span>{englishPreview}</span>
           </div>
+          {selectedFont !== "default" && (
+            <div
+              className="font-preview-legacy-sample"
+              style={{ fontFamily: getTamilLegacyPreviewFamily(selectedFont) }}
+            >
+              <div className="legacy-sample-label">Actual font file preview</div>
+              <p>{legacyGlyphPreview}</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

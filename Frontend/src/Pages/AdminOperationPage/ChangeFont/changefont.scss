@@ -116,11 +116,24 @@ $admin-border: rgba(219, 112, 147, 0.3);
 }
 
 .font-option-description,
+.font-option-glyph-preview,
 .font-save-note,
 .font-preview-meta {
   color: rgba(248, 249, 250, 0.65);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.font-option-glyph-preview {
+  display: block;
+  margin-top: 7px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: var(--font-option-preview-family);
+  font-size: 21px;
+  line-height: 1.25;
 }
 
 .font-save-note {
@@ -162,6 +175,30 @@ $admin-border: rgba(219, 112, 147, 0.3);
     color: #4d3b4d;
     font-size: 16px;
   }
+}
+
+.font-preview-legacy-sample {
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid rgba(255, 111, 174, 0.26);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+
+  p {
+    margin: 8px 0 0;
+    color: #fff;
+    font-size: clamp(26px, 4vw, 48px);
+    line-height: 1.25;
+  }
+}
+
+.legacy-sample-label {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  color: rgba(248, 249, 250, 0.7);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 900px) {
