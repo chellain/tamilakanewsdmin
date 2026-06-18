@@ -7,6 +7,7 @@ import HandlePages from "./HandlePages/HandlePages";
 import Sidebar from "./Sidebar/Sidebar";
 import Websitelyt from "./WebsiteLayout/Websitelyt";
 import Manageuser from "./Manageuser/Manageuser.jsx";
+import ChangeFont from "./ChangeFont/ChangeFont.jsx";
 import { selectAllPages, selectDistrictPage } from "../Slice/adminSelectors.js";
 import { syncPagesFromAdmin } from "../Slice/editpaperSlice/editpaperslice.js";
 import { updateAdminConfig } from "../../Api/adminApi.js";
@@ -50,7 +51,8 @@ export default function Adminop() {
         dropdownPosition1: adminState.dropdownPosition1,
         dropdownPosition2: adminState.dropdownPosition2,
         selectedDistrict1: adminState.selectedDistrict1,
-        selectedDistrict2: adminState.selectedDistrict2
+        selectedDistrict2: adminState.selectedDistrict2,
+        selectedFont: adminState.selectedFont
       }).catch((error) => {
         console.error("Failed to save admin config:", error);
       });
@@ -71,6 +73,7 @@ export default function Adminop() {
           {activeMenuItem === "handle-pages" && <HandlePages />}
           {activeMenuItem === "website-layout" && <Websitelyt />}
           {activeMenuItem === "manage-users" && <Manageuser />}
+          {activeMenuItem === "change-font" && <ChangeFont />}
         </div>
       </div>
     </main>

@@ -8,7 +8,8 @@ const AdminConfigSchema = new mongoose.Schema(
     dropdownPosition1: { type: Number, default: 0 },
     dropdownPosition2: { type: Number, default: 0 },
     selectedDistrict1: { type: String, default: "" },
-    selectedDistrict2: { type: String, default: "" }
+    selectedDistrict2: { type: String, default: "" },
+    selectedFont: { type: String, default: "default" }
   },
   { timestamps: true }
 );

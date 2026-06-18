@@ -146,7 +146,8 @@ const initialState = {
   dropdownPosition1: 0,
   dropdownPosition2: 0,
   selectedDistrict1: "",
-  selectedDistrict2: ""
+  selectedDistrict2: "",
+  selectedFont: "default"
 };
 
 const adminSlice = createSlice({
@@ -161,7 +162,8 @@ const adminSlice = createSlice({
         dropdownPosition1,
         dropdownPosition2,
         selectedDistrict1,
-        selectedDistrict2
+        selectedDistrict2,
+        selectedFont
       } = action.payload || {};
 
       if (Array.isArray(allPages)) state.allPages = allPages;
@@ -171,8 +173,13 @@ const adminSlice = createSlice({
       if (typeof dropdownPosition2 === "number") state.dropdownPosition2 = dropdownPosition2;
       if (typeof selectedDistrict1 === "string") state.selectedDistrict1 = selectedDistrict1;
       if (typeof selectedDistrict2 === "string") state.selectedDistrict2 = selectedDistrict2;
+      if (typeof selectedFont === "string") state.selectedFont = selectedFont;
 
       updateAllPagePositions(state);
+    },
+
+    setSelectedFont: (state, action) => {
+      state.selectedFont = action.payload || "default";
     },
 
     // -------------------- PAGE MANAGEMENT --------------------
@@ -443,6 +450,7 @@ const adminSlice = createSlice({
 
 export const {
   setAdminConfig,
+  setSelectedFont,
   addPage,
   updatePage,
   deletePage,

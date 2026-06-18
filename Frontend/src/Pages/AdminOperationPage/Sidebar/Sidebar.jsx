@@ -28,6 +28,12 @@ export default function Sidebar({ activeItem, setActiveItem, onLogout }) {
       description: "User administration"
     },
     {
+      id: "change-font",
+      icon: <FiFileText />,
+      label: "Change Font",
+      description: "Tamil website font"
+    },
+    {
       id: "logout",
       icon: <FiLogOut />,
       label: "Log Out",
