@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import luffy from "../../assets/luffy.png";
@@ -40,13 +40,22 @@ import BigNewsContainer4B from "../Newspaper/Containers_/BigContainer4B";
 import PreviewNorContainer5 from "../Newspaper/PreviewContainers/PreviewNorContainer5";
 import { updateNewsPageConfig } from "../../Api/newsPageApi";
 import { setNewsPageConfig } from "../Slice/newspageSlice";
+import {
+  applyTamilFontToElement,
+  ensureTamilFontFaces,
+  getTamilFontFamily,
+} from "../../utils/tamilFonts";
+
+ensureTamilFontFaces();
 
 export default function PreviewPage({ forcedNewsId = null, editMode = false }) {
+  const pageRef = useRef(null);
   const dispatch = useDispatch();
   const { id } = useParams();
   const { allNews, translatedNews, language } = useSelector((state) => state.newsform);
   const newsPageConfig = useSelector((state) => state.newspage?.config);
   const allPages = useSelector((state) => state.admin?.allPages || []);
+  const selectedFont = useSelector((state) => state.admin?.selectedFont);
   
   // Font size state - starts at 100% (base size)
   const [fontSize, setFontSize] = useState(100);
@@ -57,7 +66,7 @@ export default function PreviewPage({ forcedNewsId = null, editMode = false }) {
     backgroundColor: isOn ? "#141414" : "#ffffff",
     color: isOn ? "#ffffff" : "#141414",
     transition: "all 0.3s ease",
-    fontFamily: "Noto Sans Tamil",
+    fontFamily: getTamilFontFamily(selectedFont),
   };
 
   const icons = [
@@ -117,6 +126,10 @@ export default function PreviewPage({ forcedNewsId = null, editMode = false }) {
   });
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    return applyTamilFontToElement(pageRef.current, selectedFont);
+  }, [selectedFont, language, id, forcedNewsId]);
   
   useEffect(() => {
     const handleResize = () => {
@@ -292,7 +305,7 @@ export default function PreviewPage({ forcedNewsId = null, editMode = false }) {
   };
 
   return (
-    <div className={`prepge-main ${isOn ? "dark" : ""}`} style={{ ...themeStyle, minHeight: "100vh" }}>
+    <div ref={pageRef} className={`prepge-main ${isOn ? "dark" : ""}`} style={{ ...themeStyle, minHeight: "100vh" }}>
       <div className="pp-nav-ov">
         <Navbarr
           setIsOn={setIsOn}

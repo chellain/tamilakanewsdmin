@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSelectedFont } from "../../Slice/adminSlice.js";
 import {
   ensureTamilFontFaces,
-  getTamilFontFamily,
   getTamilLegacyPreviewFamily,
+  getTamilTextRenderProps,
   normalizeTamilFontId,
   TAMIL_FONT_OPTIONS,
 } from "../../../utils/tamilFonts.js";
@@ -25,6 +25,7 @@ export default function ChangeFont() {
   const selectedOption =
     TAMIL_FONT_OPTIONS.find((font) => font.id === selectedFont) ||
     TAMIL_FONT_OPTIONS[0];
+  const tamilPreviewRender = getTamilTextRenderProps(selectedFont, tamilPreview);
 
   useEffect(() => {
     ensureTamilFontFaces();
@@ -96,10 +97,10 @@ export default function ChangeFont() {
           </div>
           <div
             className="font-preview-sample"
-            style={{ fontFamily: getTamilFontFamily(selectedFont) }}
+            style={tamilPreviewRender.style}
           >
-            <h2>{tamilPreview}</h2>
-            <p>{tamilPreview}</p>
+            <h2>{tamilPreviewRender.text}</h2>
+            <p>{tamilPreviewRender.text}</p>
             <span>{englishPreview}</span>
           </div>
           {selectedFont !== "default" && (

@@ -1,12 +1,22 @@
 import React from "react";
 import Navbar from "./Components/Navbarr";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import "./newspaper.scss";
 import Footer from "./Components/Footer";
 import Sidebar from "./Components/Sidebar";
 import PagePreview from "./Components2/PagePreview";
+import {
+  applyTamilFontToElement,
+  ensureTamilFontFaces,
+  getTamilFontFamily,
+} from "../../utils/tamilFonts";
+
+ensureTamilFontFaces();
 
 export default function NewsPaperM() {
+  const pageRef = useRef(null);
+  const selectedFont = useSelector((state) => state.admin?.selectedFont);
   const [isOn, setIsOn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState("main");
@@ -15,7 +25,7 @@ export default function NewsPaperM() {
     backgroundColor: isOn ? "#141414" : "#ffffff",
     color: isOn ? "#ffffff" : "#141414",
     transition: "all 0.3s ease",
-    fontFamily: "Noto Sans Tamil",
+    fontFamily: getTamilFontFamily(selectedFont),
   };
 
   // Apply dark/light to entire viewport so left/right margins are never white
@@ -34,8 +44,12 @@ export default function NewsPaperM() {
     };
   }, [isOn]);
 
+  useEffect(() => {
+    return applyTamilFontToElement(pageRef.current, selectedFont);
+  }, [selectedFont, activePage]);
+
   return (
-    <div style={{ ...themeStyle, width: "100%", minHeight: "100vh", margin: 0, padding: 0 }}>
+    <div ref={pageRef} style={{ ...themeStyle, width: "100%", minHeight: "100vh", margin: 0, padding: 0 }}>
       <div className="main-screen" style={{ ...themeStyle, backgroundColor: "transparent", maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}>
         <Navbar
           setIsOn={setIsOn}
