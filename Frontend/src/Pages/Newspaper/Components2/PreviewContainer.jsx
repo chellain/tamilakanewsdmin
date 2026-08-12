@@ -164,9 +164,10 @@ export default function PreviewContainer({
         <div 
           style={{ 
             display: "grid", 
-            gridTemplateColumns: `repeat(${effectiveColumns}, 1fr)`, 
+            gridTemplateColumns: `repeat(${effectiveColumns}, minmax(0, 1fr))`, 
             gap: `${grid.gap}px`, 
             width: "100%",
+            minWidth: 0,
             position: "relative",
           }}
         >
