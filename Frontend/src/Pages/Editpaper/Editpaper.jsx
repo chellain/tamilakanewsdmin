@@ -115,7 +115,8 @@ export default function Editpaper() {
         <div
           className="ep-ed-cont"
           style={{
-            height: `${pageSettings.height}px`,
+            height: "auto",
+            minHeight: `${pageSettings.height}px`,
             padding: `${pageSettings.padding}px`,
             position: "relative",
             overflow: "visible",
@@ -130,7 +131,8 @@ export default function Editpaper() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${pageSettings.gridColumns}, 1fr)`,
+              gridTemplateColumns: `repeat(${pageSettings.gridColumns}, minmax(0, 1fr))`,
+              alignItems: "start",
               gap: `${pageSettings.gap}px`,
               width: "100%",
               marginBottom: `${pageSettings.gap}px`,

@@ -91,7 +91,7 @@ export default function PagePreview({ pageName = "main" }) {
   //   • Let height be auto so all stacked containers are visible.
   //   • Lines are hidden (see below).
   const effectiveGridColumns = isMobile ? 1 : pageSettings.gridColumns;
-  const effectiveHeight = isMobile ? "auto" : `${pageSettings.height}px`;
+  const effectiveMinHeight = isMobile ? "auto" : `${pageSettings.height}px`;
   const effectivePadding = isMobile ? "12px" : `${padding}px`;
 
   return (
@@ -101,8 +101,8 @@ export default function PagePreview({ pageName = "main" }) {
     <MobileContext.Provider value={isMobile}>
       <div
         style={{
-          height: effectiveHeight,
-          minHeight: isMobile ? "auto" : undefined,
+          height: "auto",
+          minHeight: effectiveMinHeight,
           padding: effectivePadding,
           position: "relative",
           // Match the editor canvas: author-positioned columns can extend
@@ -121,6 +121,7 @@ export default function PagePreview({ pageName = "main" }) {
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${effectiveGridColumns}, minmax(0, 1fr))`,
+            alignItems: "start",
             gap: `${pageSettings.gap}px`,
             width: "100%",
             marginBottom: `${pageSettings.gap}px`,

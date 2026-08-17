@@ -280,6 +280,93 @@ $gap2: 15px;
   font-size: 13px;
 }
 
+/* Grid-safe editor sizing: cards scale inside their grid cells instead of overlapping neighbors. */
+.ep-bg-news-1,
+.ep-bg-news-2-wrapper,
+.ep-bg-news-2,
+.ep-bg-news-3-wrapper,
+.ep-bg-news-3,
+.ep-bg-news-4a-wrapper,
+.ep-bg-news-4a,
+.ep-bg-news5-1,
+.ep-nm-news-1,
+.ep-nm-news-2,
+.ep-nm-news-3,
+.ep-nm-news-4,
+.ep-nm-news-5,
+.ep-nm-news-6,
+.ep-nm-news-7,
+.ep-nm-news-8,
+.ep-nm2-news-1 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.ep-bg-news-1,
+.ep-bg-news-2,
+.ep-bg-news-3,
+.ep-bg-news-4a,
+.ep-bg-news5-1,
+.ep-nm-news-1,
+.ep-nm-news-2,
+.ep-nm-news-3,
+.ep-nm-news-4,
+.ep-nm-news-5,
+.ep-nm-news-6,
+.ep-nm-news-7,
+.ep-nm-news-8 {
+  min-width: 0;
+}
+
+.ep-nm-news-7,
+.ep-nm-news-8 {
+  flex: 1 1 auto !important;
+}
+
+.epbn1-img,
+.epbn2-img,
+.epbn3-img,
+.epbn4a-img,
+.epbn51-img,
+.epnn1-img,
+.epnn2-img,
+.epnn3-img,
+.epnn4-img,
+.epnn5-img,
+.epnn6-img,
+.epnn7-img,
+.epnn8-img,
+.epnn21-img {
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.epbn51-img,
+.epnn1-img,
+.epnn2-img,
+.epnn3-img,
+.epnn4-img,
+.epnn5-img,
+.epnn6-img,
+.epnn7-img,
+.epnn8-img {
+  flex: 0 1 auto;
+}
+
+.ep-nm3-sbc,
+.ep-nm4-sbc,
+.ep-nm5-sbc,
+.ep-nm6-sbc,
+.ep-nm7-sbc,
+.ep-nm8-sbc {
+  min-width: 0;
+  max-width: 100% !important;
+  overflow-wrap: anywhere;
+}
+
 /// normal news container 3
 .ep-nm-news-3 {
   width: 395px;
@@ -882,4 +969,91 @@ $gap2: 15px;
 
 .settings-content::-webkit-scrollbar-thumb:hover {
   background: #b0b0b0;
+}
+
+/* Final grid-safe editor override. Keep this after legacy duplicate card rules. */
+.ep-bg-news-1,
+.ep-bg-news-2-wrapper,
+.ep-bg-news-2,
+.ep-bg-news-3-wrapper,
+.ep-bg-news-3,
+.ep-bg-news-4a-wrapper,
+.ep-bg-news-4a,
+.ep-bg-news5-1,
+.ep-nm-news-1,
+.ep-nm-news-2,
+.ep-nm-news-3,
+.ep-nm-news-4,
+.ep-nm-news-5,
+.ep-nm-news-6,
+.ep-nm-news-7,
+.ep-nm-news-8,
+.ep-nm2-news-1 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.ep-bg-news-1,
+.ep-bg-news-2,
+.ep-bg-news-3,
+.ep-bg-news-4a,
+.ep-bg-news5-1,
+.ep-nm-news-1,
+.ep-nm-news-2,
+.ep-nm-news-3,
+.ep-nm-news-4,
+.ep-nm-news-5,
+.ep-nm-news-6,
+.ep-nm-news-7,
+.ep-nm-news-8 {
+  min-width: 0;
+}
+
+.ep-nm-news-7,
+.ep-nm-news-8 {
+  flex: 1 1 auto !important;
+}
+
+.epbn1-img,
+.epbn2-img,
+.epbn3-img,
+.epbn4a-img,
+.epbn51-img,
+.epnn1-img,
+.epnn2-img,
+.epnn3-img,
+.epnn4-img,
+.epnn5-img,
+.epnn6-img,
+.epnn7-img,
+.epnn8-img,
+.epnn21-img {
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.epbn51-img,
+.epnn1-img,
+.epnn2-img,
+.epnn3-img,
+.epnn4-img,
+.epnn5-img,
+.epnn6-img,
+.epnn7-img,
+.epnn8-img {
+  flex: 0 1 auto;
+}
+
+.ep-nm3-sbc,
+.ep-nm4-sbc,
+.ep-nm5-sbc,
+.ep-nm6-sbc,
+.ep-nm7-sbc,
+.ep-nm8-sbc {
+  min-width: 0;
+  max-width: 100% !important;
+  overflow-wrap: anywhere;
 }

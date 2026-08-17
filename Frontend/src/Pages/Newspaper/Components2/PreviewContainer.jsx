@@ -115,6 +115,7 @@ export default function PreviewContainer({
         flexDirection: "column",
         // On mobile each container takes full width and sits below the previous
         width: isMobile ? "100%" : undefined,
+        minWidth: 0,
         boxSizing: "border-box",
       }}
     >
@@ -134,6 +135,7 @@ export default function PreviewContainer({
           position: "relative", 
           overflow: "visible", 
           padding: `${effectivePadding}px`, 
+          minWidth: 0,
           // On mobile let height be driven by content; no fixed minimum
           minHeight: isMobile
             ? "auto"
@@ -216,6 +218,7 @@ export default function PreviewContainer({
                   position: "relative",
                   zIndex: 10 + index,
                   width: isMobile ? "100%" : undefined,
+                  minWidth: 0,
                   boxSizing: "border-box",
                 };
 
@@ -287,6 +290,7 @@ export default function PreviewContainer({
                       position: "relative", 
                       zIndex: 10 + index,
                       width: isMobile ? "100%" : undefined,
+                      minWidth: 0,
                       boxSizing: "border-box",
                     }}
                   >
@@ -308,6 +312,7 @@ export default function PreviewContainer({
                       position: "relative",
                       zIndex: 10 + index,
                       width: "100%",
+                      minWidth: 0,
                       height: "fit-content",
                       // Allow horizontal scroll on mobile if slider content
                       // is wider than the viewport
