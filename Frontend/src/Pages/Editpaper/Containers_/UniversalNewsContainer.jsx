@@ -477,7 +477,7 @@ const UniversalNewsContainer = ({
       borderRadius: "5px",
       overflow: "hidden",
       flexShrink: 0,
-      maxWidth: "100%",
+      maxWidth: isMobile ? "100%" : "none",
       aspectRatio: imgWidth && imgHeight ? `${imgWidth}/${imgHeight}` : undefined,
       alignSelf: isMobile && isSideBySideLayout ? "flex-start" : undefined,
     };
@@ -647,7 +647,7 @@ const UniversalNewsContainer = ({
   };
 
   return (
-    <div style={{ position: "relative", width: isMobile ? "100%" : "fit-content", maxWidth: "100%" }}>
+    <div style={{ position: "relative", width: isMobile ? "100%" : "fit-content", maxWidth: isMobile ? "100%" : "none" }}>
       <style>
         {`
           .universal-container {
@@ -758,7 +758,7 @@ const UniversalNewsContainer = ({
           padding: `${isMobile ? Math.min(padding, 8) : padding}px`,
           zIndex: showEditPopup ? 200 : 1,
           isolation: "isolate",
-          maxWidth: "100%",
+          maxWidth: isMobile ? "100%" : "none",
           boxSizing: "border-box",
         }}
       >

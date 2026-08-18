@@ -27,7 +27,9 @@ export const containerReducers = {
             },
             spacing: {
               padding: 0,
-              margin: 0
+              margin: 0,
+              width: 0,
+              height: 0
             },
             autoPopulate: null,
             nestedContainers: [],
@@ -40,14 +42,15 @@ export const containerReducers = {
   },
 
   updateContainerGrid(state, action) {
-    const { catName, containerId, columns, gap } = action.payload;
+    const { catName, containerId, columns, gap, span } = action.payload;
     const cont = state.pages
       .find(p => p.catName === catName)
       ?.containers.find(c => c.id === containerId);
 
     if (cont) {
-      cont.grid.columns = columns;
-      cont.grid.gap = gap;
+      if (columns !== undefined) cont.grid.columns = columns;
+      if (gap !== undefined) cont.grid.gap = gap;
+      if (span !== undefined) cont.grid.span = span;
     }
     logState(state, "updateContainerGrid");
   },
@@ -81,15 +84,17 @@ export const containerReducers = {
   },
 
   updateContainerSpacing(state, action) {
-    const { catName, containerId, padding, margin } = action.payload;
+    const { catName, containerId, padding, margin, width, height } = action.payload;
     const cont = state.pages
       .find(p => p.catName === catName)
       ?.containers.find(c => c.id === containerId);
 
     if (cont) {
-      if (!cont.spacing) cont.spacing = { padding: 0, margin: 0 };
+      if (!cont.spacing) cont.spacing = { padding: 0, margin: 0, width: 0, height: 0 };
       if (padding !== undefined) cont.spacing.padding = padding;
       if (margin !== undefined) cont.spacing.margin = margin;
+      if (width !== undefined) cont.spacing.width = width;
+      if (height !== undefined) cont.spacing.height = height;
     }
     logState(state, "updateContainerSpacing");
   },

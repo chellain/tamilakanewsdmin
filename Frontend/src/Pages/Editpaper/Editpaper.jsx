@@ -132,7 +132,7 @@ export default function Editpaper() {
             style={{
               display: "grid",
               gridTemplateColumns: `repeat(${pageSettings.gridColumns}, minmax(0, 1fr))`,
-              alignItems: "start",
+              alignItems: "stretch",
               gap: `${pageSettings.gap}px`,
               width: "100%",
               marginBottom: `${pageSettings.gap}px`,

@@ -36,7 +36,9 @@ export const nestedReducers = {
             },
             spacing: {
               padding: 0,
-              margin: 0
+              margin: 0,
+              width: 0,
+              height: 0
             },
             autoPopulate: null,
             nestedContainers: [],
@@ -63,15 +65,16 @@ export const nestedReducers = {
   },
 
   updateNestedContainerGrid(state, action) {
-    const { catName, parentContainerId, nestedContainerId, columns, gap } = action.payload;
+    const { catName, parentContainerId, nestedContainerId, columns, gap, span } = action.payload;
     const nestedCont = state.pages
       .find(p => p.catName === catName)
       ?.containers.find(c => c.id === parentContainerId)
       ?.nestedContainers?.find(nc => nc.id === nestedContainerId);
 
     if (nestedCont) {
-      nestedCont.grid.columns = columns;
-      nestedCont.grid.gap = gap;
+      if (columns !== undefined) nestedCont.grid.columns = columns;
+      if (gap !== undefined) nestedCont.grid.gap = gap;
+      if (span !== undefined) nestedCont.grid.span = span;
     }
     logState(state, "updateNestedContainerGrid");
   },
@@ -97,16 +100,18 @@ export const nestedReducers = {
   },
 
   updateNestedContainerSpacing(state, action) {
-    const { catName, parentContainerId, nestedContainerId, padding, margin } = action.payload;
+    const { catName, parentContainerId, nestedContainerId, padding, margin, width, height } = action.payload;
     const nestedCont = state.pages
       .find(p => p.catName === catName)
       ?.containers.find(c => c.id === parentContainerId)
       ?.nestedContainers?.find(nc => nc.id === nestedContainerId);
 
     if (nestedCont) {
-      if (!nestedCont.spacing) nestedCont.spacing = { padding: 0, margin: 0 };
+      if (!nestedCont.spacing) nestedCont.spacing = { padding: 0, margin: 0, width: 0, height: 0 };
       if (padding !== undefined) nestedCont.spacing.padding = padding;
       if (margin !== undefined) nestedCont.spacing.margin = margin;
+      if (width !== undefined) nestedCont.spacing.width = width;
+      if (height !== undefined) nestedCont.spacing.height = height;
     }
     logState(state, "updateNestedContainerSpacing");
   },
